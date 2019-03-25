@@ -1,0 +1,132 @@
+{
+  "photo_1_1": {
+    "id": "photo_1_1",
+    "loc": "Gullfoss",
+    "date": "2018-12-10",
+    "time": "10:00",
+    "width": 375,
+    "height": 205,
+    "src": "/trips/trip_1/photo_1_1.jpg",
+    "owner": "user_1"
+  },
+  "photo_1_2": {
+    "id": "photo_1_2",
+    "loc": "Gullfoss",
+    "date": "2018-12-10",
+    "time": "11:00",
+    "width": 375,
+    "height": 252,
+    "src": "/trips/trip_1/photo_1_2.jpg",
+    "owner": "user_2"
+  },
+  "photo_1_3": {
+    "id": "photo_1_3",
+    "loc": "Gullfoss",
+    "date": "2018-12-10",
+    "time": "12:00",
+    "width": 375,
+    "height": 250,
+    "src": "/trips/trip_1/photo_1_3.jpg",
+    "owner": "user_3"
+  },
+  "photo_1_4": {
+    "id": "photo_1_4",
+    "loc": "Gullfoss",
+    "date": "2018-12-10",
+    "time": "13:00",
+    "width": 375,
+    "height": 250,
+    "src": "/trips/trip_1/photo_1_4.jpg",
+    "owner": "user_4"
+  },
+  "photo_1_5": {
+    "id": "photo_1_5",
+    "loc": "Magic town",
+    "date": "2018-12-10",
+    "time": "10:00",
+    "width": 375,
+    "height": 237,
+    "src": "/trips/trip_1/photo_1_5.jpg",
+    "owner": "user_1"
+  },
+  "photo_1_6": {
+    "id": "photo_1_6",
+    "loc": "Magic town",
+    "date": "2018-12-10",
+    "time": "11:00",
+    "width": 375,
+    "height": 241,
+    "src": "/trips/trip_1/photo_1_6.jpg",
+    "owner": "user_1"
+  },
+  "photo_1_7": {
+    "id": "photo_1_7",
+    "loc": "Unknown village",
+    "date": "2018-12-11",
+    "time": "10:00",
+    "width": 375,
+    "height": 221,
+    "src": "/trips/trip_1/photo_1_7.jpg",
+    "owner": "user_2"
+  },
+  "photo_1_8": {
+    "id": "photo_1_8",
+    "loc": "Unknown village",
+    "date": "2018-12-11",
+    "time": "11:00",
+    "width": 375,
+    "height": 250,
+    "src": "/trips/trip_1/photo_1_8.jpg",
+    "owner": "user_2"
+  },
+  "photo_1_9": {
+    "id": "photo_1_9",
+    "loc": "Unknown village",
+    "date": "2018-12-11",
+    "time": "12:00",
+    "width": 375,
+    "height": 250,
+    "src": "/trips/trip_1/photo_1_9.jpg",
+    "owner": "user_3"
+  },
+  "photo_1_10": {
+    "id": "photo_1_10",
+    "loc": "Unknown village",
+    "date": "2018-12-11",
+    "time": "13:00",
+    "width": 375,
+    "height": 252,
+    "src": "/trips/trip_1/photo_1_10.jpg",
+    "owner": "user_3"
+  },
+  "photo_1_11": {
+    "id": "photo_1_11",
+    "loc": "Unknown village",
+    "date": "2018-12-11",
+    "time": "14:00",
+    "width": 375,
+    "height": 240,
+    "src": "/trips/trip_1/photo_1_11.jpg",
+    "owner": "user_1"
+  },
+  "photo_1_12": {
+    "id": "photo_1_12",
+    "loc": "Unknown village",
+    "date": "2018-12-11",
+    "time": "15:00",
+    "width": 375,
+    "height": 250,
+    "src": "/trips/trip_1/photo_1_12.jpg",
+    "owner": "user_1"
+  },
+  "photo_1_13": {
+    "id": "photo_1_13",
+    "loc": "Unknown village",
+    "date": "2018-12-11",
+    "time": "16:00",
+    "width": 375,
+    "height": 250,
+    "src": "/trips/trip_1/photo_1_13.jpg",
+    "owner": "user_1"
+  }
+}

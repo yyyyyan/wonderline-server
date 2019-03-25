@@ -1,0 +1,13 @@
+{
+  "id": "user_2",
+  "name": "z.z",
+  "avatarSrc": "/users/user_2/user_2.png",
+  "friends": [
+    "user_1",
+    "user_3"
+  ],
+  "trips": [
+    "trip_1",
+    "trip_2"
+  ]
+}

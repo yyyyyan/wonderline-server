@@ -1,0 +1,12 @@
+{
+  "id": "trip_1",
+  "name": "A song of ice and fire",
+  "users": [
+    "user_1",
+    "user_2",
+    "user_3",
+    "user_4"
+  ],
+  "description": "Iceland is a Nordic island country in the North Atlantic, with a population of 348,580 and an area of 103,000 km2 (40,000 sq mi), making it the most sparsely …",
+  "photoNb": 13
+}

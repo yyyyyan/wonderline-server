@@ -1,0 +1,32 @@
+{
+  "name": "wonderline-server",
+  "version": "1.0.0",
+  "description": "A server who provides RESTful API for wonderline-ui",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js --exec babel-node --",
+    "test": "echo \"Error: no test yet\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yyyyyan/wonderline-server.git"
+  },
+  "keywords": [
+    "wonderline"
+  ],
+  "author": "zyan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yyyyyan/wonderline-server/issues"
+  },
+  "homepage": "https://github.com/yyyyyan/wonderline-server#readme",
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.10"
+  }
+}
