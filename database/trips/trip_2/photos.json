@@ -7,7 +7,7 @@
     "width": 2560,
     "height": 1707,
     "src": "/trips/trip_2/photo_2_1.jpg",
-    "owner": "user_3"
+    "owner": "user_1"
   },
   "photo_2_2": {
     "id": "photo_2_2",
@@ -17,7 +17,7 @@
     "width": 2560,
     "height": 1707,
     "src": "/trips/trip_2/photo_2_2.jpg",
-    "owner": "user_3"
+    "owner": "user_1"
   },
   "photo_2_3": {
     "id": "photo_2_3",

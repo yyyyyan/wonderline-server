@@ -5,13 +5,18 @@ import httpProcessor from '../utils/http-processor'
 class UserProcessor {
     getUserNumber(req, res) {
         userGetters.getUserNumber()
-            .then((data) => httpProcessor.sendGenericGetSuccessRes(req, res, data),
-                (err) => httpProcessor.sendGenericGetFailureRes(req, res, err))
+            .then(data => httpProcessor.sendGenericGetSuccessRes(req, res, data),
+                err => httpProcessor.sendGenericGetFailureRes(req, res, err))
     }
     postUserNumber(req, res) {
         userActions.addUserNumber()
             .then(() => httpProcessor.sendGenericPostSuccessRes(req, res),
-                (err) => httpProcessor.sendGenericPostFailureRes(req, res, err))
+                err => httpProcessor.sendGenericPostFailureRes(req, res, err))
+    }
+    getUser(req, res) {
+        userGetters.getUser(req.params.id)
+            .then(data => httpProcessor.sendGenericGetSuccessRes(req, res, data),
+            err => httpProcessor.sendGenericGetFailureRes(req, res, err))
     }
 }
 

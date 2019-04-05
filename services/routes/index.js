@@ -10,8 +10,11 @@ router.get('/statistic/trip-nb', tripProcessor.getTripNumber)
 router.post('/statistic/trip-nb', tripProcessor.postTripNumber)
 
 /** User routes */
-
+router.get('/user/:id', userProcessor.getUser)
 
 /** Trip routes */
+router.get('/trip/:id', tripProcessor.getTrip)
+router.get('/trip/:id/photos', tripProcessor.getPhotos)
+router.get('/trip/:id/comments/:pid', tripProcessor.getPhotoComments)
 
 export default router;
