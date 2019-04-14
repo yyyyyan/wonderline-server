@@ -39,6 +39,20 @@ class Utils {
         comment.userAvatarSrc = user.avatarSrc
         return comment
     }
+    generateDailyInfosWhenAddingPhoto(dailyInfos, photo) {
+        const dateIndex = dailyInfos.findIndex(dailyInfo => dailyInfo.date === photo.date)
+        if (dateIndex < 0)
+            dailyInfos.push(this.generateDailyInfo(photo))
+        else if (!dailyInfos[dateIndex].locs.some(loc => loc.name === photo.loc))
+            dailyInfos[dateIndex].locs.push(this.generateDailyLoc(photo))
+        return dailyInfos
+    }
+    generateDailyInfo(photo) {
+        return {date: photo.date, locs: [this.generateDailyLoc(photo)]}
+    }
+    generateDailyLoc(photo) {
+        return {name: photo.loc, covers: [{photoId: photo.id, comment: ""}]}
+    }
 }
 
 export default new Utils()

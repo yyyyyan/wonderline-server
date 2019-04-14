@@ -29,6 +29,10 @@ class Getters {
     async getPhotos(tripId) {
         return tripUtil.generatePhotosWithCompleteSrc(await dbReader.readTripPhotos(tripId))
     }
+    async getPhotoNb(tripId) {
+        const trip = await dbReader.readTrip(tripId)
+        return trip.photoNb
+    }
     async getPhotoComments(tripId, photoId) {
         const comments = await dbReader.readTripComments(tripId)
         if (!comments || !comments[photoId])
