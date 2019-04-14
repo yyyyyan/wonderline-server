@@ -2,5 +2,6 @@ export default {
     SERVER_PORT: '8081',
     SERVER_ADDRESS: 'http://192.168.1.25:8081',
     GET_SUCCESS_CODE: '200',
-    POST_SUCCESS_CODE: '201'
+    POST_SUCCESS_CODE: '201',
+    MAX_FILE_NB_PER_POST: 12
 }

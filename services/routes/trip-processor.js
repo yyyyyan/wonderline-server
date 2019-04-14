@@ -24,9 +24,16 @@ class TripProcessor {
                 err => httpProcessor.sendGenericGetFailureRes(req, res, err))
     }
     getPhotoComments(req, res) {
-        tripGetters.getPhotoComments(req.params.id, req.params.pid)
+        tripGetters.getPhotoComments(req.params.id, req.query.photoId)
             .then(data => httpProcessor.sendGenericGetSuccessRes(req, res, data),
                 err => httpProcessor.sendGenericGetFailureRes(req, res, err))
+    }
+    postPhotos(req, res) {
+        tripActions.generatePhotosFromFiles(req.params.id, req.files)
+            .then(photos => tripActions.addPhotos(req.params.id, photos, req.query.ownerId),
+                err => httpProcessor.sendGenericPostFailureRes(req, res, err))
+            .then(() => httpProcessor.sendGenericPostSuccessRes(req, res),
+                err => httpProcessor.sendGenericPostFailureRes(req, res, err))
     }
 }
 
