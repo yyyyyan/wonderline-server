@@ -13,7 +13,7 @@ class Getters {
             return await userGetters.getReducedUser(id)
         }))
         trip.dailyInfos =
-            tripUtil.generateDailyInfosWithCoverPhotoSrc(trip.dailyInfos, await dbReader.readTripPhotos(tripId))
+            tripUtil.generateDailyInfosWithCoverPhotos(trip.dailyInfos, await dbReader.readTripPhotos(tripId))
         return trip
     }
     // TODO Find a way to avoid code duplication
@@ -23,7 +23,8 @@ class Getters {
             return await userGetters.getReducedUser(id)
         }))
         const photos = await dbReader.readTripPhotos(tripId)
-        trip.coverPhotoSrc = tripUtil.generateCompletePhotoSrc(photos[trip.coverPhotoId].src)
+        trip.coverPhoto = photos[trip.coverPhotoId]
+        trip.coverPhoto.src = tripUtil.generateCompletePhotoSrc(trip.coverPhoto.src)
         return tripUtil.generateReducedTrip(trip)
     }
     async getPhotos(tripId) {
