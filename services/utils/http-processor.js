@@ -1,17 +1,26 @@
 import httpConfig from '../../configs/http-config'
 
 class HttpProcessor {
-    sendGenericGetSuccessRes(req, res, data) {
+    sendGenericGetSuccessRes(res, data) {
         return res.status(httpConfig.GET_SUCCESS_CODE).send({success: 'true', payload: data})
     }
-    sendGenericGetFailureRes(req, res, err) {
+    sendGenericGetFailureRes(res, err) {
         console.log(`[Http Processor] GET failed: ${err}`)
     }
-    sendGenericPostSuccessRes(req, res) {
-        return res.status(httpConfig.POST_SUCCESS_CODE).send({success: 'true'})
+    sendWrongGetQueryRes(res) {
+        this.sendGenericGetFailureRes(res, 'Wrong query')
     }
-    sendGenericPostFailureRes(req, res, err) {
+    sendGenericPostSuccessRes(res, data) {
+        return res.status(httpConfig.POST_SUCCESS_CODE).send({success: 'true', payload: data})
+    }
+    sendGenericPostFailureRes(res, err) {
         console.log(`[Http Processor] POST failed: ${err}`)
+    }
+    sendWrongPostQueryRes(res) {
+        this.sendGenericPostFailureRes(res, 'Wrong query')
+    }
+    sendWrongPostDataRes(res) {
+        this.sendGenericPostFailureRes(res, 'Wrong data')
     }
 }
 

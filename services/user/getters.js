@@ -10,10 +10,10 @@ class Getters {
     async getUser(userId) {
         const user = await dbReader.readUser(userId)
         user.friends = await Promise.all(user.friends.map(async id => {
-            return await this.getReducedUser(id)
+            return this.getReducedUser(id)
         }))
         user.trips = await Promise.all(user.trips.map(async id => {
-            return await tripGetters.getReducedTrip(id)
+            return tripGetters.getReducedTrip(id)
         }))
         return userUtil.generateUserWithCompleteSrc(user)
     }

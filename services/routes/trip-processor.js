@@ -4,36 +4,43 @@ import httpProcessor from '../utils/http-processor'
 
 class TripProcessor {
     getTripNumber(req, res) {
+        if (!req.query.id) return httpProcessor.sendWrongGetQueryRes(res)
         tripGetters.getTripNumber()
-            .then(data => httpProcessor.sendGenericGetSuccessRes(req, res, data),
-                err => httpProcessor.sendGenericGetFailureRes(req, res, err))
-    }
-    postTripNumber(req, res) {
-        tripActions.addTripNumber()
-            .then(() => httpProcessor.sendGenericPostSuccessRes(req, res),
-                err => httpProcessor.sendGenericPostFailureRes(req, res, err))
+            .then(data => httpProcessor.sendGenericGetSuccessRes(res, data))
+            .catch(err => httpProcessor.sendGenericGetFailureRes(res, err))
     }
     getTrip(req, res) {
-        tripGetters.getTrip(req.params.id)
-            .then(data => httpProcessor.sendGenericGetSuccessRes(req, res, data),
-                err => httpProcessor.sendGenericGetFailureRes(req, res, err))
+        if (!req.query.id) return httpProcessor.sendWrongGetQueryRes(res)
+        tripGetters.getTrip(req.query.id)
+            .then(data => httpProcessor.sendGenericGetSuccessRes(res, data))
+            .catch(err => httpProcessor.sendGenericGetFailureRes(res, err))
     }
     getPhotos(req, res) {
-        tripGetters.getPhotos(req.params.id)
-            .then(data => httpProcessor.sendGenericGetSuccessRes(req, res, data),
-                err => httpProcessor.sendGenericGetFailureRes(req, res, err))
+        if (!req.query.id) return httpProcessor.sendWrongGetQueryRes(res)
+        tripGetters.getPhotos(req.query.id)
+            .then(data => httpProcessor.sendGenericGetSuccessRes(res, data))
+            .catch(err => httpProcessor.sendGenericGetFailureRes(res, err))
     }
     getPhotoComments(req, res) {
-        tripGetters.getPhotoComments(req.params.id, req.query.photoId)
-            .then(data => httpProcessor.sendGenericGetSuccessRes(req, res, data),
-                err => httpProcessor.sendGenericGetFailureRes(req, res, err))
+        if (!req.query.id || !req.query.photoId) return httpProcessor.sendWrongGetQueryRes(res)
+        tripGetters.getPhotoComments(req.query.id, req.query.photoId)
+            .then(data => httpProcessor.sendGenericGetSuccessRes(res, data))
+            .catch(err => httpProcessor.sendGenericGetFailureRes(res, err))
+    }
+    postSummary(req, res) {
+        if (!req.query.id) return httpProcessor.sendWrongPostQueryRes(res)
+        if (!req.body.summary) return httpProcessor.sendWrongPostDataRes(res)
+        tripActions.updateSummary(req.query.id, req.body.summary)
+            .then(data => httpProcessor.sendGenericPostSuccessRes(res, data))
+            .catch(err => httpProcessor.sendGenericPostFailureRes(res, err))
     }
     postPhotos(req, res) {
-        tripActions.generatePhotosFromFiles(req.params.id, req.files)
-            .then(photos => tripActions.addPhotos(req.params.id, photos, req.query.ownerId),
-                err => httpProcessor.sendGenericPostFailureRes(req, res, err))
-            .then(() => httpProcessor.sendGenericPostSuccessRes(req, res),
-                err => httpProcessor.sendGenericPostFailureRes(req, res, err))
+        if (!req.query.id) return httpProcessor.sendWrongPostQueryRes(res)
+        if (!req.files) return httpProcessor.sendWrongPostDataRes(res)
+        tripActions.generatePhotosFromFiles(req.query.id, req.files)
+            .then(photos => tripActions.addPhotos(req.query.id, photos, req.query.ownerId))
+            .then(data => httpProcessor.sendGenericPostSuccessRes(res, data))
+            .catch(err => httpProcessor.sendGenericPostFailureRes(res, err))
     }
 }
 

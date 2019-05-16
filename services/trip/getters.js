@@ -10,7 +10,7 @@ class Getters {
     async getTrip(tripId) {
         const trip = await dbReader.readTrip(tripId)
         trip.users = await Promise.all(trip.users.map(async id => {
-            return await userGetters.getReducedUser(id)
+            return userGetters.getReducedUser(id)
         }))
         trip.dailyInfos =
             tripUtil.generateDailyInfosWithCoverPhotos(trip.dailyInfos, await dbReader.readTripPhotos(tripId))
@@ -20,7 +20,7 @@ class Getters {
     async getReducedTrip(tripId) {
         const trip = await dbReader.readTrip(tripId)
         trip.users = await Promise.all(trip.users.map(async id => {
-            return await userGetters.getReducedUser(id)
+            return userGetters.getReducedUser(id)
         }))
         const photos = await dbReader.readTripPhotos(tripId)
         trip.coverPhoto = photos[trip.coverPhotoId]
@@ -38,7 +38,7 @@ class Getters {
         const comments = await dbReader.readTripComments(tripId)
         if (!comments || !comments[photoId])
             return null
-        return await Promise.all(comments[photoId].map(async comment => {
+        return Promise.all(comments[photoId].map(async comment => {
             return tripUtil.generateCommentWithUserInfo(comment, await userGetters.getUser(comment.userId))
         }))
     }

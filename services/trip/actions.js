@@ -11,12 +11,19 @@ class Actions {
         dataCounter.tripNb = dataCounter.tripNb + 1
         return dbWriter.writeDataCounter(dataCounter)
     }
+    async updateSummary(tripId, summary) {
+        const trip = await dbReader.readTrip(tripId)
+        if (!!summary.name) trip.name = summary.name
+        if (!!summary.description) trip.description = summary.description
+        await dbWriter.writeTrip(tripId, trip)
+        return tripGetters.getTrip(tripId)
+    }
     async generatePhotosFromFiles(tripId, files) {
         let photoIndex = await tripGetters.getPhotoNb(tripId)
-        return await Promise.all(files.map(async file => {
+        return Promise.all(files.map(async file => {
             photoIndex += 1
             const photoId = await mediaWriter.updateTripPhotoPath(file, tripId, photoIndex)
-            return await mediaReader.readTripPhoto(tripId, photoId)
+            return mediaReader.readTripPhoto(tripId, photoId)
         }))
     }
     async addPhotos(tripId, newPhotos, ownerId) {
@@ -28,8 +35,8 @@ class Actions {
             trip.photoNb += 1
             trip.dailyInfos = tripUtil.generateDailyInfosWhenAddingPhoto(trip.dailyInfos, photo)
         })
-        return await Promise.all([dbWriter.writeTrip(tripId, trip),
-            dbWriter.writeTripPhotos(tripId, photos)])
+        await Promise.all([dbWriter.writeTrip(tripId, trip), dbWriter.writeTripPhotos(tripId, photos)])
+        return { trip: await tripGetters.getTrip(tripId), photos: await tripGetters.getPhotos(tripId) }
     }
 }
 export default new Actions()
