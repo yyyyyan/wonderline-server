@@ -1,6 +1,17 @@
 import httpConfig from '../../configs/http-config'
 
 class Utils {
+    generateNewTrip(userId, tripNb) {
+        return {
+            id: `trip_${tripNb + 1}`,
+            name: "New trip",
+            users: [userId],
+            description: "",
+            coverPhotoId: "",
+            photoNb: 0,
+            dailyInfos: []
+        }
+    }
     generateReducedTrip(trip) {
         return {
             id: trip.id,

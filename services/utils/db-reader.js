@@ -2,8 +2,14 @@ import dbConfig from '../../configs/db-config'
 const fs = require('fs')
 
 class DbReader {
+    async readUsers() {
+        return this.readJson(`/users/users.json`)
+    }
     async readUser(userId) {
         return this.readJson(`/users/${userId}/user.json`)
+    }
+    async readUserAuthen(userId) {
+        return this.readJson(`/users/${userId}/authen.json`)
     }
     async readTrip(tripId) {
         return this.readJson(`/trips/${tripId}/trip.json`)
