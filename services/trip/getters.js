@@ -28,7 +28,7 @@ class Getters {
         return tripUtil.generateReducedTrip(trip)
     }
     async getPhotos(tripId) {
-        return tripUtil.generatePhotosWithCompleteSrc(await dbReader.readTripPhotos(tripId))
+        return Object.values(tripUtil.generatePhotosWithCompleteSrc(await dbReader.readTripPhotos(tripId)))
     }
     async getPhotoNb(tripId) {
         const trip = await dbReader.readTrip(tripId)

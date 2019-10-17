@@ -7,5 +7,9 @@ class DateFormatter {
         if (!date) date = new Date()
         return `${date.getHours()}:${date.getMinutes()}`
     }
+    getGenericTimeStamp(date) {
+        if (!date) date = new Date()
+        return date.getTime()
+    }
 }
 export default new DateFormatter()
