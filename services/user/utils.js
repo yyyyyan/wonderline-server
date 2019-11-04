@@ -6,7 +6,9 @@ class Utils {
         return {
             id: `user_${userNb + 1}`,
             name: newUser.name,
+            signature: newUser.signature || '',
             avatarSrc: dbConfig.DEFAULT_AVATAR_REL_PATH,
+            profileBkgSrc: dbConfig.DEFAULT_PROFILE_BKG_REL_PATH,
             friends: [],
             trips: []
         }
@@ -19,6 +21,7 @@ class Utils {
     }
     generateUserWithCompleteSrc(user) {
         user.avatarSrc = httpConfig.SERVER_ADDRESS + user.avatarSrc
+        user.profileBkgSrc = httpConfig.SERVER_ADDRESS + user.profileBkgSrc
         return user
     }
     generateReducedUser(user) {
@@ -26,7 +29,9 @@ class Utils {
         return {
             id: user.id,
             name: user.name,
-            avatarSrc: user.avatarSrc
+            signature: user.signature,
+            avatarSrc: user.avatarSrc,
+            profileBkgSrc: user.profileBkgSrc
         }
     }
 }
