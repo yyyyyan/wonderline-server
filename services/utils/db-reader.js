@@ -2,23 +2,26 @@ import dbConfig from '../../configs/db-config'
 const fs = require('fs')
 
 class DbReader {
+    async readUsers() {
+        return this.readJson(`/users/users.json`)
+    }
     async readUser(userId) {
-        return await this.readJson(`users/${userId}/user.json`)
+        return this.readJson(`/users/${userId}/user.json`)
+    }
+    async readUserAuthen(userId) {
+        return this.readJson(`/users/${userId}/authen.json`)
     }
     async readTrip(tripId) {
-        return await this.readJson(`trips/${tripId}/trip.json`)
-    }
-    async readTripDailyInfos(tripId) {
-        return await this.readJson(`trips/${tripId}/daily-infos.json`)
+        return this.readJson(`/trips/${tripId}/trip.json`)
     }
     async readTripPhotos(tripId) {
-        return await this.readJson(`trips/${tripId}/photos.json`)
+        return this.readJson(`/trips/${tripId}/photos.json`)
     }
     async readTripComments(tripId) {
-        return await this.readJson(`trips/${tripId}/comments.json`)
+        return this.readJson(`/trips/${tripId}/comments.json`)
     }
     async readDataCounter() {
-        return await this.readJson('data-counter.json')
+        return this.readJson('/data-counter.json')
     }
     readJson(filePath) {
         return new Promise(function(resolve, reject) {
