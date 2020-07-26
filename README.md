@@ -1,19 +1,74 @@
 # Wonderline Server
-A server who provides RESTful API for [Wonderline UI](https://github.com/yyyyyan/wonderline-ui)
+A server who provides RESTFul APIs for [Wonderline UI](https://github.com/yyyyyan/wonderline-ui).
+## Setup
+ 1. Creating virtual environment
+    1. [Install Anaconda](https://docs.anaconda.com/anaconda/install/)
+    2. Create Python 3.7 virtual environment via Pycharm
+        1. Open `preferences`, search `Python Interpreter`
+        2. Click the configuration icon, then click the button `Add...`
+        3. Click the `Conda Enviroment` on the left, choose `Python 3.7` as the Python version.
+        4. Click `OK` and `Apply`.
+    3. Activate virtual environment
+        ```commandline
+        conda activate wonderline-server
+        ```
+ 2. Installing required libraries
+    ```commandline
+    pip install -r requirements.txt
+    ```
+### Quick Start
+**Using Docker**
+ 1. Install latest [Docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
+ 2. Run the following command:
+    ```shell script
+    docker-compose rm -f && docker-compose up --build
+    ```
+ 3. Wait every component (Flask, Minio, Cassandra, Nginx) to launch.
+ 4. Go to [http://localhost/hello_world](http://localhost/hello_world).
+ 5. You are expected to see `'Hello, World!'`.
+ 6. The swagger documentations (empty now) are shown in [http://localhost](http://localhost).
+### Debugging Cassandra
+Open another terminal window, run the following command:
+```commandline
+docker run -ti --network wonderline-server_wonderline-shared-net --rm cassandra:3.11.6 cqlsh cassandra
+```
+You are expected to see a CQL Shell as follows:
+```shell script
+Connected to MyCluster at cassandra:9042.
+[cqlsh 5.0.1 | Cassandra 3.11.6 | CQL spec 3.4.4 | Native protocol v4]
+Use HELP for help.
+cqlsh>
+```
 
-## Install Setups
-Make sure you have Node.js version 10.15.0 or above installed.
+Test the following things:
+ 1. Change `keyspace`
+    ```commandline
+    USE wonderline;
+    ```
+ 2. List all tables
+    ```commandline
+    DESCRIBE TABLES;
+    ```
+ 3. List the contents for some tables:
+    ```commandline
+    SELECT * FROM user;
+    SELECT * FROM photo;
+    SELECT * FROM trip;
+    SELECT * FROM trips_by_user;
+    SELECT * FROM photos_by_trip;
+    ```
+### Debugging Flask
+```commandline
+export FLASK_ENV=development
+flask run --port 8000
+```
 
-Make sure you have NPM version 6.4.1 or above installed.
+## Testing
+Install the required libraries for testing
+```commandline
+pip install -r requirements.dev.txt
 ```
-$ npm install
-```
-## Server Commands
-Compile and hot-reload for dev:
-```
-npm start
-```
-Run tests:
-```
-npm test
+### Unit testing
+```commandline
+pytest tests
 ```

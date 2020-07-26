@@ -1,0 +1,63 @@
+version: "3.7"
+services:
+  wonderline_app:
+    container_name: wonderline_app
+    build: .
+    ports:
+      - 8000:8000
+    env_file:
+      - docker.dev.env
+    links:
+      - cassandra:cassandra_host
+      - minio:minio_host
+    volumes:
+      - ./DB_scripts:/app/DB_scripts
+    depends_on:
+      - minio
+      - cassandra
+    networks:
+      - wonderline-shared-net
+
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    networks:
+      - wonderline-shared-net
+    ports:
+      - 80:80
+    depends_on:
+      - wonderline_app
+      - minio
+
+  minio:
+    container_name: minio
+    image: minio/minio
+    networks:
+      - wonderline-shared-net
+    ports:
+      - 9000:9000
+    volumes:
+      - /tmp/minio_data:/export
+    environment:
+      - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+      - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    command: server /export
+
+  cassandra:
+    container_name: cassandra
+    image: cassandra:3.11.6
+    networks:
+      - wonderline-shared-net
+    ports:
+      - 9042:9042
+    volumes:
+      - /tmp/cassandra_data:/var/lib/cassandra/data
+    environment:
+      - CASSANDRA_START_RPC=true
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=datacenter
+
+networks:
+  wonderline-shared-net:
+    driver: "bridge"
