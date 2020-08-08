@@ -1,3 +1,6 @@
+"""
+Implementations of cassandra database query.
+"""
 from .models import DBUser
 from .utils import connect_cassandra
 

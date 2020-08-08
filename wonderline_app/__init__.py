@@ -1,3 +1,6 @@
+"""
+Flask application entrypoint.
+"""
 import logging
 import os
 
@@ -7,8 +10,7 @@ from minio import Minio
 from minio.error import ResponseError
 
 from wonderline_app.api import rest_api
-from wonderline_app.api.trips.resources import trips_namespace
-from wonderline_app.api.users.resources import users_namespace
+from wonderline_app.api.namespaces import users_namespace, trips_namespace, common_namespace
 from wonderline_app.db.models import DBUser
 
 LOGGER = logging.getLogger(__name__)
@@ -17,9 +19,10 @@ IS_DB_INITIALISED = False  # only for setup testing
 
 def create_app():
     app = Flask(__name__)
-    rest_api.init_app(app)
+    rest_api.add_namespace(common_namespace)
     rest_api.add_namespace(users_namespace)
     rest_api.add_namespace(trips_namespace)
+    rest_api.init_app(app)
     return app
 
 
@@ -72,6 +75,8 @@ def ping_minio():
 
 
 APP = create_app()
+# TODO: move global configuration(s) to another file
+APP.config['BUNDLE_ERRORS'] = True  # Activate bundle error handling
 
 
 @APP.route('/hello_world')

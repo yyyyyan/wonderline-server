@@ -12,7 +12,7 @@ def connect_cassandra(function):
     return wrapper
 
 
-def convert_string_date_to_timestamp(date: datetime.datetime):
+def convert_string_date_to_timestamp(date: datetime.datetime) -> int:
     # date format: 2020-07-30 18:43:48.628000+0000
     timestamp = date.timestamp()  # 1596134528.628
     timestamp_without_point = int(str(timestamp).replace('.', ''))  # 1596134528628

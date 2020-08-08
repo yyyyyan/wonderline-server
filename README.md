@@ -60,8 +60,10 @@ Test the following things:
 ### Debugging Flask
 ```commandline
 export FLASK_ENV=development
+export FLASK_APP=wonderline_app
 flask run --port 8000
 ```
+Open [http://localhost:8000](http://localhost:8000) to debug Swagger documentations.
 
 ## Testing
 Install the required libraries for testing

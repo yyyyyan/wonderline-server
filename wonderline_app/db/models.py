@@ -1,3 +1,6 @@
+"""
+Cassandra ORM.
+"""
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.columns import UserDefinedType
 from cassandra.cqlengine.models import Model
