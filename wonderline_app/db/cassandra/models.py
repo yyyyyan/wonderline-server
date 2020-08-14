@@ -6,7 +6,7 @@ from cassandra.cqlengine.columns import UserDefinedType
 from cassandra.cqlengine.models import Model
 from cassandra.cqlengine.usertype import UserType
 
-from wonderline_app.db.utils import convert_string_date_to_timestamp
+from wonderline_app.utils import convert_date_to_timestamp
 
 
 class Reply(UserType):
@@ -14,8 +14,6 @@ class Reply(UserType):
 
     reply_id = columns.Text()
     user_id = columns.Text()
-    user_name = columns.Text()
-    user_avatar_src = columns.Text()
     create_time = columns.DateTime()
     content = columns.Text()
     liked_nb = columns.SmallInt()
@@ -25,21 +23,10 @@ class Reply(UserType):
         return {
             "reply_id": self.reply_id,
             "user_id": self.user_id,
-            "user_name": self.user_name,
-            "user_avatar_src": self.user_avatar_src,
-            "create_time": convert_string_date_to_timestamp(self.create_time),
+            "create_time": convert_date_to_timestamp(self.create_time),
             "content": self.content,
             "liked_nb": self.liked_nb
         }
-
-
-class ReducedUser(UserType):
-    __type_name__ = "reduced_user"
-
-    user_id = columns.Text()
-    access_level = columns.Text()
-    user_name = columns.Text()
-    user_avatar_src = columns.Text()
 
 
 class ReducedPhoto(UserType):
@@ -70,8 +57,8 @@ class ReducedPhoto(UserType):
             "status": self.status,
             "location": self.location,
             "country": self.country,
-            "create_time": convert_string_date_to_timestamp(self.create_time),
-            "upload_time": convert_string_date_to_timestamp(self.upload_time),
+            "create_time": convert_date_to_timestamp(self.create_time),
+            "upload_time": convert_date_to_timestamp(self.upload_time),
             "width": self.width,
             "height": self.height,
             "low_quality_src": self.low_quality_src,
@@ -92,8 +79,6 @@ class Comment(Model):
     comment_id = columns.Text(primary_key=True)
     create_time = columns.Date(primary_key=True, clustering_order="DESC")
     user_id = columns.Text(primary_key=True, clustering_order="DESC")
-    user_name = columns.Text()
-    user_avatar_src = columns.Text()
     content = columns.Text()
     liked_nb = columns.SmallInt()
     reply_nb = columns.SmallInt()
@@ -103,10 +88,8 @@ class Comment(Model):
     def json(self):
         return {
             "comment_id": self.comment_id,
-            "create_time": convert_string_date_to_timestamp(self.create_time),
+            "create_time": convert_date_to_timestamp(self.create_time),
             "user_id": self.user_id,
-            "user_name": self.user_name,
-            "user_avatar_src": self.user_avatar_src,
             "content": self.content,
             "liked_nb": self.liked_nb,
             "reply_nb": self.reply_nb,
@@ -121,8 +104,6 @@ class CommentsByPhoto(Model):
     create_time = columns.Date(primary_key=True, clustering_order="DESC")
     comment_id = columns.Text(primary_key=True, clustering_order="DESC")
     user_id = columns.Text()
-    user_name = columns.Text()
-    user_avatar_src = columns.Text()
     content = columns.Text()
     liked_nb = columns.SmallInt()
     reply_nb = columns.SmallInt()
@@ -132,11 +113,9 @@ class CommentsByPhoto(Model):
     def json(self):
         return {
             "photo_id": self.photo_id,
-            "create_time": convert_string_date_to_timestamp(self.create_time),
+            "create_time": convert_date_to_timestamp(self.create_time),
             "comment_id": self.comment_id,
             "user_id": self.user_id,
-            "user_name": self.user_name,
-            "user_avatar_src": self.user_avatar_src,
             "content": self.content,
             "liked_nb": self.liked_nb,
             "reply_nb": self.reply_nb,
@@ -188,49 +167,13 @@ class Photo(Model):
             "status": self.status,
             "location": self.location,
             "country": self.country,
-            "create_time": convert_string_date_to_timestamp(self.create_time),
-            "upload_time": convert_string_date_to_timestamp(self.upload_time),
+            "create_time": convert_date_to_timestamp(self.create_time),
+            "upload_time": convert_date_to_timestamp(self.upload_time),
             "width": self.width,
             "height": self.height,
             "low_quality_src": self.low_quality_src,
             "src": self.src,
             "liked_nb": self.liked_nb
-        }
-
-
-class DBUser(Model):
-    __table_name__ = "user"
-
-    user_id = columns.Text(primary_key=True)
-    access_level = columns.Text()
-    name = columns.Text()
-    avatar_str = columns.Text()
-    create_time = columns.DateTime()
-    signature = columns.Text()
-    profile_low_quality_src = columns.Text()
-    profile_src = columns.Text()
-    follower_nb = columns.Text()
-    followers = columns.Set(columns.Text())
-
-    @property
-    def json(self):
-        return {
-            **self.reduced_json,
-            "create_time": convert_string_date_to_timestamp(self.create_time),
-            "signature": self.signature,
-            "profile_low_quality_src": self.profile_low_quality_src,
-            "profile_src": self.profile_src,
-            "follower_nb": self.follower_nb,
-            "followers": list(self.followers)
-        }
-
-    @property
-    def reduced_json(self):
-        return {
-            "user_id": self.user_id,
-            "access_level": self.access_level,
-            "name": self.name,
-            "avatar_str": self.avatar_str
         }
 
 
@@ -270,9 +213,9 @@ class Trip(Model):
             "name": self.name,
             "description": self.description,
             "users": list(self.users),
-            "create_time": convert_string_date_to_timestamp(self.create_time),
-            "begin_time": convert_string_date_to_timestamp(self.begin_time),
-            "end_time": convert_string_date_to_timestamp(self.end_time),
+            "create_time": convert_date_to_timestamp(self.create_time),
+            "begin_time": convert_date_to_timestamp(self.begin_time),
+            "end_time": convert_date_to_timestamp(self.end_time),
             "photo_nb": self.photo_nb,
             "cover_photo": self.cover_photo.json()
         }
@@ -297,14 +240,14 @@ class TripsByUser(Model):
     def json(self):
         return {
             "user_id": self.user_id,
-            "create_time": convert_string_date_to_timestamp(self.create_time),
+            "create_time": convert_date_to_timestamp(self.create_time),
             "trip_id": self.trip_id,
             "access_level": self.access_level,
             "name": self.name,
             "description": self.description,
             "users": list(self.users),
-            "begin_time": convert_string_date_to_timestamp(self.begin_time),
-            "end_time": convert_string_date_to_timestamp(self.end_time),
+            "begin_time": convert_date_to_timestamp(self.begin_time),
+            "end_time": convert_date_to_timestamp(self.end_time),
             "photo_nb": self.photo_nb,
             "cover_photo": self.cover_photo.json()
         }
@@ -331,13 +274,13 @@ class PhotosByTrip(Model):
     def json(self):
         return {
             "trip_id": self.trip_id,
-            "create_time": convert_string_date_to_timestamp(self.create_time),
+            "create_time": convert_date_to_timestamp(self.create_time),
             "photo_id": self.photo_id,
             "owner": self.owner,
             "access_level": self.access_level,
             "location": self.location,
             "country": self.country,
-            "upload_time": convert_string_date_to_timestamp(self.upload_time),
+            "upload_time": convert_date_to_timestamp(self.upload_time),
             "width": self.width,
             "height": self.height,
             "low_quality_src": self.low_quality_src,
@@ -375,3 +318,5 @@ class HighlightsByUser(Model):
     access_level = columns.Text()
     cover_photo = UserDefinedType(ReducedPhoto)
     description = columns.Text()
+
+

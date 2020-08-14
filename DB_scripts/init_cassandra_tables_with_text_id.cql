@@ -3,26 +3,17 @@ CREATE KEYSPACE IF NOT EXISTS wonderline WITH replication = {'class':'SimpleStra
 USE wonderline;
 
 CREATE TYPE IF NOT EXISTS reply (
-    reply_id uuid,
-    user_id uuid,
-    user_name text,
-    user_avatar_src text,
+    reply_id text,
+    user_id text,
     create_time timestamp,
     content text,
     liked_nb smallint,
 );
 
-CREATE TYPE IF NOT EXISTS reduced_user (
-    user_id uuid,
-    access_level text,
-    user_name text,
-    user_avatar_src text
-);
-
 CREATE TYPE IF NOT EXISTS reduced_photo (
-    photo_id uuid,
-    trip_id uuid,
-    owner uuid,
+    photo_id text,
+    trip_id text,
+    owner text,
     access_level text,
     status text,
     location text,
@@ -42,10 +33,8 @@ CREATE TYPE IF NOT EXISTS rearranged_photo (
 );
 
 CREATE TABLE IF NOT EXISTS comment (
-    comment_id uuid,
-    user_id uuid,
-    user_name text,
-    user_avatar_src text,
+    comment_id text,
+    user_id text,
     create_time timestamp,
     content text,
     liked_nb smallint,
@@ -55,11 +44,9 @@ CREATE TABLE IF NOT EXISTS comment (
 ) WITH CLUSTERING ORDER BY (create_time DESC);
 
 CREATE TABLE IF NOT EXISTS comments_by_photo (
-    photo_id uuid,
-    comment_id uuid,
-    user_id uuid,
-    user_name text,
-    user_avatar_src text,
+    photo_id text,
+    comment_id text,
+    user_id text,
     create_time timestamp,
     content text,
     liked_nb smallint,
@@ -70,9 +57,9 @@ CREATE TABLE IF NOT EXISTS comments_by_photo (
 
 
 CREATE TABLE IF NOT EXISTS photo (
-    photo_id uuid,
-    trip_id uuid,
-    owner uuid,
+    photo_id text,
+    trip_id text,
+    owner text,
     access_level text,
     status text,
     location text,
@@ -85,34 +72,20 @@ CREATE TABLE IF NOT EXISTS photo (
     src text,
     liked_nb smallint,
     high_quality_src text,
-    liked_users set<uuid>,
-    mentioned_users set<uuid>,
+    liked_users set<text>,
+    mentioned_users set<text>,
     comment_nb smallint,
-    comments set<uuid>,
+    comments set<text>,
     PRIMARY KEY (photo_id)
 );
 
-CREATE TABLE IF NOT EXISTS user (
-    user_id uuid,
-    access_level text,
-    name text,
-    avatar_str text,
-    create_time timestamp,
-    signature text,
-    profile_low_quality_src text,
-    profile_src text,
-    follower_nb smallint,
-    followers set<uuid>,
-    PRIMARY KEY (user_id)
-);
-
 CREATE TABLE IF NOT EXISTS trip (
-    trip_id uuid,
+    trip_id text,
     access_level text,
     status text,
     name text,
     description text,
-    users set<uuid>,
+    users set<text>,
     create_time timestamp,
     begin_time timestamp,
     end_time timestamp,
@@ -125,24 +98,24 @@ CREATE TABLE IF NOT EXISTS trip (
 );
 
 CREATE TABLE IF NOT EXISTS trips_by_user (
-    user_id uuid,
-    trip_id uuid,
+    user_id text,
+    trip_id text,
     access_level text,
     name text,
     description text,
-    users set<uuid>,
+    users set<text>,
     create_time timestamp,
     begin_time timestamp,
     end_time timestamp,
     photo_nb smallint,
-    cover_photo uuid,
+    cover_photo text,
     PRIMARY KEY ((user_id), create_time, trip_id),
 ) WITH CLUSTERING ORDER BY (create_time DESC);
 
 CREATE TABLE IF NOT EXISTS photos_by_trip (
-    trip_id uuid,
-    photo_id uuid,
-    owner uuid,
+    trip_id text,
+    photo_id text,
+    owner text,
     access_level text,
     location text,
     country text,
@@ -157,27 +130,27 @@ CREATE TABLE IF NOT EXISTS photos_by_trip (
 ) WITH CLUSTERING ORDER BY (create_time DESC);
 
 CREATE TABLE IF NOT EXISTS albums_by_user (
-    user_id uuid,
+    user_id text,
     create_time timestamp,
-    album_id uuid,
+    album_id text,
     access_level text,
     cover_photos set<frozen<rearranged_photo>>,
     PRIMARY KEY ((user_id), create_time, album_id)
 ) WITH CLUSTERING ORDER BY (create_time DESC);
 
 CREATE TABLE IF NOT EXISTS mentions_by_user (
-    user_id uuid,
+    user_id text,
     create_time timestamp,
-    mention_id uuid,
+    mention_id text,
     access_level text,
     photo frozen<reduced_photo>,
     PRIMARY KEY ((user_id), create_time, mention_id)
 ) WITH CLUSTERING ORDER BY (create_time DESC);
 
 CREATE TABLE IF NOT EXISTS highlights_by_user (
-    user_id uuid,
+    user_id text,
     create_time timestamp,
-    highlight_id uuid,
+    highlight_id text,
     access_level text,
     cover_photo frozen<reduced_photo>,
     description text,

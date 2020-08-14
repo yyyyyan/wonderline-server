@@ -10,11 +10,13 @@ services:
     links:
       - cassandra:cassandra_host
       - minio:minio_host
+      - postgres:postgres_host
     volumes:
       - ./DB_scripts:/app/DB_scripts
     depends_on:
       - minio
       - cassandra
+      - postgres
     networks:
       - wonderline-shared-net
 
@@ -57,6 +59,25 @@ services:
       - CASSANDRA_CLUSTER_NAME=MyCluster
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_DC=datacenter
+
+  postgres:
+    container_name: postgres
+    image: postgres:9.6.18
+    restart: always
+    networks:
+      - wonderline-shared-net
+    ports:
+      - 5432:5432
+    volumes:
+      - ./DB_scripts/init_postgresql_tables.sql:/docker-entrypoint-initdb.d/init_1_shcema.sql
+      - ./DB_scripts/init_postgresql_with_mock_data.sql:/docker-entrypoint-initdb.d/init_2_mock_data.sql
+      - /tmp/postgres_data:/var/lib/postgresql/data
+
+    environment:
+      - POSTGRES_DB=wonderline_postgres
+      - POSTGRES_USER=wonderline_postgres
+      - POSTGRES_PASSWORD=wonderline_postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
 networks:
   wonderline-shared-net:

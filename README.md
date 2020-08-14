@@ -57,6 +57,25 @@ Test the following things:
     SELECT * FROM trips_by_user;
     SELECT * FROM photos_by_trip;
     ```
+### Debugging PostgreSQL
+```commandline
+docker run -ti --network wonderline-server_wonderline-shared-net --rm postgres:9.6.18 psql --host=postgres --username=wonderline_postgres
+```
+
+Test the following things:
+ 1. Change database
+    ```
+    \c wonderline
+    ```
+ 2. Show user table
+    ```
+    select * from _uesr;
+    ```
+ 3. Show following and followed tables
+    ```
+    select * from following;
+    select * from followed;
+    ```
 ### Debugging Flask
 ```commandline
 export FLASK_ENV=development
