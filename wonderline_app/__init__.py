@@ -11,7 +11,6 @@ from minio.error import ResponseError
 
 from wonderline_app.api import rest_api
 from wonderline_app.api.namespaces import users_namespace, trips_namespace, common_namespace
-from wonderline_app.db.models import DBUser
 
 LOGGER = logging.getLogger(__name__)
 IS_DB_INITIALISED = False  # only for setup testing
@@ -49,9 +48,9 @@ def init_cassandra():
                     session.execute(command)
 
     session = connect_cassandra_and_return_session()
-    run_cql_script(file_path='DB_scripts/create_tables_with_text_id.cql')
+    run_cql_script(file_path='DB_scripts/init_cassandra_tables_with_text_id.cql')
     session.set_keyspace('wonderline')
-    run_cql_script(file_path='DB_scripts/init_db_with_mock_data.cql')
+    run_cql_script(file_path='DB_scripts/init_cassandra_with_mock_data.cql')
 
 
 def ping_minio():

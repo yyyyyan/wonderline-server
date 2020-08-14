@@ -5,7 +5,7 @@ from flask import request
 from flask_restplus import Resource
 
 from wonderline_app.api.namespaces import users_namespace
-from wonderline_app.api.users.business_logic import get_user
+from wonderline_app.core.business_logic import get_user
 from wonderline_app.api.users.request_parsers import user_parser, user_albums_parser, followers_parser, \
     user_trips_parser, user_highlights_parser, user_mentions_parser
 from wonderline_app.api.users.responses import user_res, user_albums_res, followers_res, user_trips_res, \
@@ -19,7 +19,7 @@ class User(Resource):
     def get(self, userId):
         user_token = request.args.get("userToken")
         followers_sort_type = request.args.get("followersSortType")
-        follower_nb = request.args.get("followerNb")
+        follower_nb = int(request.args.get("followerNb"))  # TODO: cast should not be necessary
         return get_user(
             user_id=userId,
             followers_sort_type=followers_sort_type,
