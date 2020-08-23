@@ -9,6 +9,7 @@ RUN pip install -r /app/requirements.txt
 
 ADD ./wonderline_app /app/wonderline_app
 COPY ./gunicorn_config.py /app
+COPY ./config.yml /app
 
 # make port 8000 available to the world outside
 EXPOSE 8000

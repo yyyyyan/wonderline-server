@@ -6,12 +6,12 @@ from flask_restplus import fields
 from wonderline_app.api.namespaces import common_namespace
 
 feed_back_model = common_namespace.model("Feedback", {
-    "code": fields.String(example="success"),
+    "code": fields.Integer(example=200),
     "message": fields.String(example="Trip has been updated successfully.")
 })
 
 err_model = common_namespace.model("Error", {
-    "code": fields.String(example="serverError"),
+    "code": fields.Integer(example=500),
     "message": fields.String(example="Server Error, please try again.")
 })
 

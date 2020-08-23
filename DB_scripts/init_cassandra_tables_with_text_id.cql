@@ -4,7 +4,7 @@ USE wonderline;
 
 CREATE TYPE IF NOT EXISTS reply (
     reply_id text,
-    user_id text,
+    user text,
     create_time timestamp,
     content text,
     liked_nb smallint,
@@ -34,7 +34,7 @@ CREATE TYPE IF NOT EXISTS rearranged_photo (
 
 CREATE TABLE IF NOT EXISTS comment (
     comment_id text,
-    user_id text,
+    user text,
     create_time timestamp,
     content text,
     liked_nb smallint,
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS comment (
 CREATE TABLE IF NOT EXISTS comments_by_photo (
     photo_id text,
     comment_id text,
-    user_id text,
+    user text,
     create_time timestamp,
     content text,
     liked_nb smallint,
@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS photos_by_trip (
     photo_id text,
     owner text,
     access_level text,
+    status text,
     location text,
     country text,
     create_time timestamp,
@@ -152,7 +153,7 @@ CREATE TABLE IF NOT EXISTS highlights_by_user (
     create_time timestamp,
     highlight_id text,
     access_level text,
-    cover_photo frozen<reduced_photo>,
+    cover_photo text,
     description text,
     PRIMARY KEY ((user_id), create_time, highlight_id)
 );

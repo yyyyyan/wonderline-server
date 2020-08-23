@@ -5,7 +5,7 @@ from wonderline_app.core.response import Response
 def test_response_json():
     res = Response(payload={"input": "tutu"})
     res.timestamp = 1597094178958585
-    assert res.json == {
+    assert res.to_dict() == {
         "payload": {"input": "tutu"},
         "errors": [],
         "feedbacks": [],
