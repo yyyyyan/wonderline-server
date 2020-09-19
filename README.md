@@ -82,6 +82,24 @@ export FLASK_APP=wonderline_app
 flask run --port 8000
 ```
 Open [http://localhost:8000](http://localhost:8000) to debug Swagger documentations.
+### Debugging Minio
+#### Minio Web Interface
+Please follow the steps in `Quick Start`, then go to `http://localhost:9000/minio/photos/`,
+it's a web interface showing all the files stored in the `photos` bucket.
+
+#### Using minio client within the minio container
+```shell script
+docker run --net=wonderline-server_wonderline-shared-net -it --entrypoint=/bin/sh minio/mc
+```
+```shell script
+mc config host add minio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+mc policy get minio/photos
+mc ls minio/photos
+```
+
+#### Uploading photo demo
+Go to `http://localhost/upload_image_page`, choose a image file, then click `Submit`,
+it will return the unique URLs for the uploaded images with different sizes.
 
 ## Testing
 Install the required libraries for testing

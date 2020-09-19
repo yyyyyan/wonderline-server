@@ -15,4 +15,7 @@ COPY ./config.yml /app
 EXPOSE 8000
 # EXPOSE 9000
 
+# create a temporary folder for saving image before moving into minio
+RUN mkdir image_tmp
+
 CMD ["gunicorn", "--config", "gunicorn_config.py", "wonderline_app:APP"]

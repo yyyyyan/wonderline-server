@@ -5,7 +5,7 @@ import logging
 from typing import Dict, List, Optional, Callable, Union, Tuple
 
 from wonderline_app.api.common.enums import AccessLevel
-from wonderline_app.core.exceptions import APIError, APIError404, APIError500, APIError401
+from wonderline_app.core.api_exceptions import APIError, APIError404, APIError500, APIError401
 from wonderline_app.core.response import Response, Error
 from wonderline_app.db.cassandra.exceptions import TripNotFound, CommentNotFound, PhotoNotFound
 from wonderline_app.db.cassandra.models import AlbumsByUser, TripsByUser, HighlightsByUser, MentionsByUser, Trip, \
