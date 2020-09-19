@@ -9,11 +9,12 @@ A server who provides RESTFul APIs for [Wonderline UI](https://github.com/yyyyya
         3. Click the `Conda Enviroment` on the left, choose `Python 3.7` as the Python version.
         4. Click `OK` and `Apply`.
     3. Activate virtual environment
-        ```commandline
+        ```shell script
         conda activate wonderline-server
         ```
  2. Installing required libraries
-    ```commandline
+    ```shell script
+    brew install postgresql
     pip install -r requirements.txt
     ```
 ### Quick Start
@@ -24,8 +25,6 @@ A server who provides RESTFul APIs for [Wonderline UI](https://github.com/yyyyya
     docker-compose rm -f && docker-compose up --build
     ```
  3. Wait every component (Flask, Minio, Cassandra, Nginx) to launch.
- 4. Go to [http://localhost/hello_world](http://localhost/hello_world).
- 5. You are expected to see `'Hello, World!'`.
  6. The swagger documentations (empty now) are shown in [http://localhost](http://localhost).
 
 **Troubleshooting**
@@ -45,7 +44,7 @@ A server who provides RESTFul APIs for [Wonderline UI](https://github.com/yyyyya
 
 ### Debugging Cassandra
 Open another terminal window, run the following command:
-```commandline
+```shell script
 docker run -ti --network wonderline-server_wonderline-shared-net --rm cassandra:3.11.6 cqlsh cassandra
 ```
 You are expected to see a CQL Shell as follows:
@@ -58,15 +57,15 @@ cqlsh>
 
 Test the following things:
  1. Change `keyspace`
-    ```commandline
+    ```shell script
     USE wonderline;
     ```
  2. List all tables
-    ```commandline
+    ```shell script
     DESCRIBE TABLES;
     ```
  3. List the contents for some tables:
-    ```commandline
+    ```shell script
     SELECT * FROM user;
     SELECT * FROM photo;
     SELECT * FROM trip;
@@ -74,7 +73,7 @@ Test the following things:
     SELECT * FROM photos_by_trip;
     ```
 ### Debugging PostgreSQL
-```commandline
+```shell script
 docker run -ti --network wonderline-server_wonderline-shared-net --rm postgres:9.6.18 psql --host=postgres --username=wonderline_postgres
 ```
 
@@ -93,19 +92,42 @@ Test the following things:
     select * from followed;
     ```
 ### Debugging Flask
-```commandline
+```shell script
 export FLASK_ENV=development
 export FLASK_APP=wonderline_app
 flask run --port 8000
 ```
 Open [http://localhost:8000](http://localhost:8000) to debug Swagger documentations.
+### Debugging Minio
+#### Minio Web Interface
+Please follow the steps in `Quick Start`, then go to `http://localhost:9000/minio/photos/`,
+it's a web interface showing all the files stored in the `photos` bucket.
+
+#### Using minio client within the minio container
+```shell script
+docker run --net=wonderline-server_wonderline-shared-net -it --entrypoint=/bin/sh minio/mc
+```
+```shell script
+mc config host add minio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+mc policy get minio/photos
+mc ls minio/photos
+```
+
+#### Uploading photo demo
+Go to `http://localhost/upload_image_page`, choose a image file, then click `Submit`,
+it will return the unique URLs for the uploaded images with different sizes.
 
 ## Testing
 Install the required libraries for testing
-```commandline
+```shell script
 pip install -r requirements.dev.txt
 ```
-### Unit testing
-```commandline
-pytest tests
-```
+### Integration testing
+ 1. Launch all the containers
+ ```shell script
+ docker-compose rm -f && docker-compose up --build
+ ```
+ 2. Open another new terminal
+ ```shell script
+ pytest -svv tests
+ ```

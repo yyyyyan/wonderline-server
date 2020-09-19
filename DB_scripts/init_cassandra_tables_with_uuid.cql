@@ -1,10 +1,12 @@
+USE wonderline;
+
 CREATE KEYSPACE IF NOT EXISTS wonderline WITH replication = {'class':'SimpleStrategy','replication_factor':1};
 
 USE wonderline;
 
 CREATE TYPE IF NOT EXISTS reply (
     reply_id uuid,
-    user_id uuid,
+    user uuid,
     create_time timestamp,
     content text,
     liked_nb smallint,
@@ -34,7 +36,7 @@ CREATE TYPE IF NOT EXISTS rearranged_photo (
 
 CREATE TABLE IF NOT EXISTS comment (
     comment_id uuid,
-    user_id uuid,
+    user uuid,
     create_time timestamp,
     content text,
     liked_nb smallint,
@@ -46,7 +48,7 @@ CREATE TABLE IF NOT EXISTS comment (
 CREATE TABLE IF NOT EXISTS comments_by_photo (
     photo_id uuid,
     comment_id uuid,
-    user_id uuid,
+    user uuid,
     create_time timestamp,
     content text,
     liked_nb smallint,
@@ -117,6 +119,7 @@ CREATE TABLE IF NOT EXISTS photos_by_trip (
     photo_id uuid,
     owner uuid,
     access_level text,
+    status text,
     location text,
     country text,
     create_time timestamp,
@@ -152,7 +155,7 @@ CREATE TABLE IF NOT EXISTS highlights_by_user (
     create_time timestamp,
     highlight_id uuid,
     access_level text,
-    cover_photo frozen<reduced_photo>,
+    cover_photo uuid,
     description text,
     PRIMARY KEY ((user_id), create_time, highlight_id)
 );

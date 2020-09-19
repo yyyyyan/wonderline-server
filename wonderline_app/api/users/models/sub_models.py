@@ -27,5 +27,6 @@ reduced_album_model = users_namespace.model("ReducedAlbum", {
 
 mention_model = users_namespace.model("Mention", {
     "id": fields.String(example="mention_001"),
-    "photo": fields.Nested(reduced_photo_model)
+    "photo": fields.Nested(reduced_photo_model),
+    "accessLevel": fields.String(example="everyone")
 })

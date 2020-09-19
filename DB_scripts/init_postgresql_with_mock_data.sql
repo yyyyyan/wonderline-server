@@ -80,7 +80,7 @@ INSERT INTO _user (
     'everyone',
     'Blue Dragon',
     'avatar.png',
-    to_timestamp(1596134528628::numeric/1000),
+    to_timestamp(1596137528628::numeric/1000),
     '',
     'bkg.png',
     'bkg.png',

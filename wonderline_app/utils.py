@@ -1,8 +1,21 @@
 import datetime
 
+import yaml
+# Q:why importing logging.config:
+# A: https://stackoverflow.com/questions/2234982/why-both-import-logging-and-import-logging-config-are-needed
+import logging.config
 
-def convert_date_to_timestamp(date: datetime.datetime) -> int:
-    # date format: 2020-07-30 18:43:48.628000+0000
-    timestamp = date.timestamp()  # 1596134528.628
-    timestamp_without_point = int(str(timestamp).replace('.', ''))  # 1596134528628
-    return timestamp_without_point
+
+def convert_date_to_timestamp(date: datetime.datetime):
+    return date.timestamp() * 1000
+
+
+def load_yaml_config(config_file_path):
+    with open(config_file_path, 'r') as yml_file:
+        cfg = yaml.load(yml_file, Loader=yaml.FullLoader)
+    return cfg
+
+
+def set_logging(logging_config_file_path):
+    logging_config = load_yaml_config(config_file_path=logging_config_file_path)['logging']
+    logging.config.dictConfig(logging_config)
