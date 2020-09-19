@@ -27,6 +27,22 @@ A server who provides RESTFul APIs for [Wonderline UI](https://github.com/yyyyya
  4. Go to [http://localhost/hello_world](http://localhost/hello_world).
  5. You are expected to see `'Hello, World!'`.
  6. The swagger documentations (empty now) are shown in [http://localhost](http://localhost).
+
+**Troubleshooting**
+ - Unable to launch postgres:
+   ```shell script
+   postgres          | initdb: directory "/var/lib/postgresql/data" exists but is not empty
+   postgres          | If you want to create a new database system, either remove or empty
+   postgres          | the directory "/var/lib/postgresql/data" or run initdb
+   postgres          | with an argument other than "/var/lib/postgresql/data".
+   postgres exited with code 1
+   ```
+   Fix:
+   ```commandline
+   rm -rf /tmp/postgres_data /tmp/minio_data /tmp/cassandra_data
+   ```
+
+
 ### Debugging Cassandra
 Open another terminal window, run the following command:
 ```commandline
