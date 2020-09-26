@@ -16,6 +16,9 @@ class CodeMessage:
             "message": self.message
         }
 
+    def __str__(self):
+        return repr(self.message)
+
 
 class Error(CodeMessage):
     def __init__(self, code: int = None, message: str = None):
@@ -33,6 +36,14 @@ class Response:
         self.errors = errors if errors else []
         self.feedbacks = feedback if feedback else []
         self.timestamp = None
+
+    @property
+    def has_errors(self):
+        return len(self.errors) > 0
+
+    @property
+    def has_feedbacks(self):
+        return len(self.feedbacks) > 0
 
     def add_error(self, err: Error):
         self.errors.append(err)

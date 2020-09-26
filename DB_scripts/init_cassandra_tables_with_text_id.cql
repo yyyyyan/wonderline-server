@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS trips_by_user (
     user_id text,
     trip_id text,
     access_level text,
+    status text,
     name text,
     description text,
     users set<text>,

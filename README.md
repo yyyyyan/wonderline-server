@@ -84,7 +84,7 @@ Test the following things:
     ```
  2. Show user table
     ```
-    select * from _uesr;
+    select * from _user;
     ```
  3. Show following and followed tables
     ```
@@ -112,11 +112,6 @@ mc config host add minio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7
 mc policy get minio/photos
 mc ls minio/photos
 ```
-
-#### Uploading photo demo
-Go to `http://localhost/upload_image_page`, choose a image file, then click `Submit`,
-it will return the unique URLs for the uploaded images with different sizes.
-
 ## Testing
 Install the required libraries for testing
 ```shell script
@@ -129,5 +124,5 @@ pip install -r requirements.dev.txt
  ```
  2. Open another new terminal
  ```shell script
- pytest -svv tests
+ docker-compose exec -T wonderline_app pytest -vvs tests
  ```

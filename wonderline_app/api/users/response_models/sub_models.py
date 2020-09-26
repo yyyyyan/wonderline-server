@@ -1,9 +1,9 @@
 """
-Definition of User related sub models.
+Definition of User related sub response_models.
 """
 from flask_restplus import fields
 from wonderline_app.api.namespaces import users_namespace
-from wonderline_app.api.trips.models.sub_models import reduced_photo_model
+from wonderline_app.api.trips.response_models.sub_models import reduced_photo_model
 
 reduced_highlight_model = users_namespace.model("ReducedHighlight", {
     "id": fields.String(example="highlight_001"),

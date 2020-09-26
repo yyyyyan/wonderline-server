@@ -1,8 +1,10 @@
+import logging
 import os
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+LOGGER = logging.getLogger(__name__)
 engine = create_engine(
     'postgresql://%s:%s@%s/%s' % (
         os.environ.get('POSTGRES_USER'),
@@ -15,7 +17,7 @@ engine = create_engine(
 try:
     postgres_meta_data = MetaData(bind=engine)
 except Exception as e:
-    print("Fail to bind meta data:", e)
+    LOGGER.exception("Fail to bind meta data:", e)
 db_session = scoped_session(sessionmaker(
     autocommit=False,
     autoflush=False,

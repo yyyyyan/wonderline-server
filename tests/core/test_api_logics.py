@@ -1,6 +1,8 @@
 import unittest
 
-import requests
+from wonderline_app import APP
+from wonderline_app.db.postgres.init import db_session
+from wonderline_app.db.postgres.models import User
 
 HOST = "http://localhost:80"
 
@@ -8,13 +10,24 @@ HOST = "http://localhost:80"
 class ApiTEST(unittest.TestCase):
     def setUp(self) -> None:
         pass
-        # requests.get(HOST + "/hello_world")
 
-    def _get_req(self, endpoint, **kwargs):
-        default_headers = {"Content-Type": "application/json"}
-        default_headers.update(kwargs.pop('headers', {}))
-        url = HOST + endpoint
-        return requests.get(url=url, headers=default_headers, **kwargs)
+    def _get_req_from_jon(self, endpoint, set_valid_token=True, **kwargs):
+        """HTTP GET request with Jon Snow user token"""
+        with APP.test_client() as c:
+            with c.session_transaction() as sess:
+                sess['_user_id'] = 'user_001'
+                sess['_fresh'] = True
+            sign_in_req = c.post(
+                "http://localhost:80/users/signIn",
+                json=dict(email='jon@gmail.com', password='password')
+            )
+            jon_user_token = sign_in_req.json['payload']['userToken']
+            default_headers = {"Content-Type": "application/json"}
+            default_headers.update(kwargs.pop('headers', {}))
+            if set_valid_token:
+                kwargs['params']['userToken'] = jon_user_token
+            url = HOST + endpoint
+            return c.get(url, headers=default_headers, query_string=kwargs['params'])
 
     def _assert_equal_json(self, j1: dict, j2: dict):
         for key, value in j1.items():
@@ -22,16 +35,20 @@ class ApiTEST(unittest.TestCase):
                 return False
 
     def _assert_response(self, expected_code, expected_res_json_without_timestamp, response):
-        response_json = response.json()
-
-        self.assertIsNotNone(response_json['timestamp'])
-        response_json.pop('timestamp')
-        expected_res_json_without_timestamp.pop('timestamp')
-        self.assertEqual(expected_code, response.status_code)
-        self.assertEqual(expected_res_json_without_timestamp, response_json)
+        response_json = response.json
+        try:
+            self.assertIsNotNone(response_json['timestamp'])
+            response_json.pop('timestamp')
+            expected_res_json_without_timestamp.pop('timestamp')
+            self.assertEqual(expected_code, response.status_code)
+            self.assertEqual(expected_res_json_without_timestamp, response_json)
+        except AssertionError as e:
+            print(f"Assert Error, got response: {response_json}")
+            print(f"expected response without timestamp: {expected_res_json_without_timestamp}")
+            raise e
 
     def test_get_user_with_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/users/user_001',
             params={
                 "userToken": 'test',
@@ -40,6 +57,12 @@ class ApiTEST(unittest.TestCase):
             })
         expected_res = {
             "payload": {
+                "reducedUser": {
+                    "id": "user_001",
+                    "accessLevel": "everyone",
+                    "name": "Jon Snow",
+                    "avatarSrc": "avatar.png"
+                },
                 "createTime": 1596134528628,
                 "signature": "The king of the North, Danny is my QUEEN!",
                 "profileLqSrc": "bkg.png",
@@ -59,14 +82,11 @@ class ApiTEST(unittest.TestCase):
                         "avatarSrc": "avatar.png"
                     }
                 ],
-                "id": "user_001",
-                "accessLevel": "everyone",
-                "name": "Jon Snow",
-                "avatarSrc": "avatar.png"
+                "isFollowedByLoginUser": False
             },
             "feedbacks": [],
             "errors": [],
-            "timestamp": 1598134804271
+            "timestamp": 1601155452818
         }
         self._assert_response(
             expected_code=200,
@@ -75,13 +95,19 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_user_with_default_parameters_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/users/user_001',
             params={
                 "userToken": 'test',
             })
         expected_res = {
             "payload": {
+                "reducedUser": {
+                    "id": "user_001",
+                    "accessLevel": "everyone",
+                    "name": "Jon Snow",
+                    "avatarSrc": "avatar.png"
+                },
                 "createTime": 1596134528628,
                 "signature": "The king of the North, Danny is my QUEEN!",
                 "profileLqSrc": "bkg.png",
@@ -125,10 +151,7 @@ class ApiTEST(unittest.TestCase):
                         "avatarSrc": "avatar.png"
                     }
                 ],
-                "id": "user_001",
-                "accessLevel": "everyone",
-                "name": "Jon Snow",
-                "avatarSrc": "avatar.png"
+                "isFollowedByLoginUser": False
             },
             "feedbacks": [],
             "errors": [],
@@ -141,7 +164,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_user_with_404_error(self):  # when a resource is not found
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/users/user_009',
             params={
                 "userToken": 'test',
@@ -150,16 +173,20 @@ class ApiTEST(unittest.TestCase):
             })
         expected_res = {
             "payload": {
+                "reducedUser": {
+                    "id": None,
+                    "accessLevel": None,
+                    "name": None,
+                    "avatarSrc": None
+                },
                 "createTime": None,
                 "signature": None,
                 "profileLqSrc": None,
                 "profileSrc": None,
                 "followerNb": None,
                 "followers": None,
-                "id": None,
-                "accessLevel": None,
-                "name": None,
-                "avatarSrc": None
+                "isFollowedByLoginUser": None
+
             },
             "feedbacks": [],
             "errors": [
@@ -177,8 +204,9 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_user_with_401_error(self):  # when user is unauthorized
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/users/user_009',
+            set_valid_token=False,
             params={
                 "userToken": None,
                 "followersSortType": "createTime",
@@ -186,16 +214,19 @@ class ApiTEST(unittest.TestCase):
             })
         expected_res = {
             "payload": {
+                "reducedUser": {
+                    "id": None,
+                    "accessLevel": None,
+                    "name": None,
+                    "avatarSrc": None
+                },
                 "createTime": None,
                 "signature": None,
                 "profileLqSrc": None,
                 "profileSrc": None,
                 "followerNb": None,
                 "followers": None,
-                "id": None,
-                "accessLevel": None,
-                "name": None,
-                "avatarSrc": None
+                "isFollowedByLoginUser": None
             },
             "feedbacks": [],
             "errors": [
@@ -212,8 +243,43 @@ class ApiTEST(unittest.TestCase):
             response=response
         )
 
+    def test_get_user_with_isFollowedByLoginUser_True(self):
+        response = self._get_req_from_jon(
+            endpoint='/users/user_002',
+            set_valid_token=True,
+            params={
+                "userToken": 'test',
+                "followersSortType": "createTime",
+                "followerNb": 0
+            })
+        expected_res = {
+            "payload": {
+                "reducedUser": {
+                    "id": "user_002",
+                    "accessLevel": "everyone",
+                    "name": "Daenerys Targaryen",
+                    "avatarSrc": "avatar.png"
+                },
+                "createTime": 1596134628628,
+                "signature": "How many times must I say no before you understand?",
+                "profileLqSrc": "bkg.png",
+                "profileSrc": "bkg.png",
+                "followerNb": 3,
+                "followers": [],
+                "isFollowedByLoginUser": True
+            },
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1601215707809
+        }
+        self._assert_response(
+            expected_code=200,
+            expected_res_json_without_timestamp=expected_res,
+            response=response
+        )
+
     def test_get_followers_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/users/user_001/followers',
             params={
                 "userToken": 'test',
@@ -233,7 +299,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_user_trips_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/users/user_001/trips',
             params={
                 "userToken": 'test',
@@ -244,8 +310,11 @@ class ApiTEST(unittest.TestCase):
             })
         expected_res = {'payload':
             [{
-                'id': 'user_001', 'accessLevel': 'everyone', 'name': 'The Winds of Winter',
+                'id': 'trip_01',
+                'accessLevel': 'everyone',
+                'name': 'The Winds of Winter',
                 'description': 'Winter is the time when things die, and cold and ice and darkness fill the world, so this is not going to be the happy feel-good that people may be hoping for. Things get worse before they get better, so things are getting worse for a lot of people.',
+                'status': 'confirmed',
                 'users': [{
                     'id': 'user_004', 'accessLevel': 'everyone', 'name': 'Blue Dragon',
                     'avatarSrc': 'avatar.png'},
@@ -301,7 +370,7 @@ class ApiTEST(unittest.TestCase):
     #     )
 
     def test_get_albums_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/users/user_001/albums',
             params={
                 "userToken": 'test',
@@ -410,7 +479,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_mentions_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/users/user_001/mentions',
             params={
                 "userToken": 'test',
@@ -484,7 +553,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_trip_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/trips/trip_01',
             params={
                 "userToken": 'test',
@@ -493,46 +562,50 @@ class ApiTEST(unittest.TestCase):
             })
         expected_res = {
             "payload": {
+                "reducedTrip": {
+                    "id": "trip_01",
+                    "accessLevel": "everyone",
+                    "name": "The Winds of Winter",
+                    "description": "Winter is the time when things die, and cold and ice and darkness fill the world, so this is not going to be the happy feel-good that people may be hoping for. Things get worse before they get better, so things are getting worse for a lot of people.",
+                    'status': 'confirmed',
+                    "users": [
+                        {
+                            "id": "user_001",
+                            "accessLevel": "everyone",
+                            "name": "Jon Snow",
+                            "avatarSrc": "avatar.png"
+                        }
+                    ],
+                    "createTime": 1596142528628,
+                    "beginTime": 1596142628628,
+                    "endTime": 1596143628628,
+                    "photoNb": 9,
+                    "coverPhoto": {
+                        "id": "photo_01_2",
+                        "accessLevel": "everyone",
+                        "tripId": "trip_01",
+                        "status": "confirmed",
+                        "user": {
+                            "id": "user_001",
+                            "accessLevel": "everyone",
+                            "name": "Jon Snow",
+                            "avatarSrc": "avatar.png"
+                        },
+                        "location": "Westeros",
+                        "country": "Westeros",
+                        "createTime": 1596142638628,
+                        "uploadTime": 1596142638728,
+                        "width": 374,
+                        "height": 280,
+                        "lqSrc": "photo_2.jpg",
+                        "src": "photo_2.jpg",
+                        "likedNb": 0
+                    }
+                },
                 "likedNb": 23892,
                 "sharedNb": 1656,
                 "savedNb": 4222,
-                "id": "trip_01",
-                "accessLevel": "everyone",
-                "name": "The Winds of Winter",
-                "description": "Winter is the time when things die, and cold and ice and darkness fill the world, so this is not going to be the happy feel-good that people may be hoping for. Things get worse before they get better, so things are getting worse for a lot of people.",
-                "users": [
-                    {
-                        "id": "user_001",
-                        "accessLevel": "everyone",
-                        "name": "Jon Snow",
-                        "avatarSrc": "avatar.png"
-                    }
-                ],
-                "createTime": 1596142528628,
-                "beginTime": 1596142628628,
-                "endTime": 1596143628628,
-                "photoNb": 9,
-                "coverPhoto": {
-                    "id": "photo_01_2",
-                    "accessLevel": "everyone",
-                    "tripId": "trip_01",
-                    "status": "confirmed",
-                    "user": {
-                        "id": "user_001",
-                        "accessLevel": "everyone",
-                        "name": "Jon Snow",
-                        "avatarSrc": "avatar.png"
-                    },
-                    "location": "Westeros",
-                    "country": "Westeros",
-                    "createTime": 1596142638628,
-                    "uploadTime": 1596142638728,
-                    "width": 374,
-                    "height": 280,
-                    "lqSrc": "photo_2.jpg",
-                    "src": "photo_2.jpg",
-                    "likedNb": 0
-                }
+
             },
             "feedbacks": [],
             "errors": [],
@@ -545,7 +618,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_trip_users(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/trips/trip_01/users',
             params={
                 "userToken": 'test',
@@ -592,7 +665,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_trip_photos(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/trips/trip_01/photos',
             params={
                 "userToken": 'test',
@@ -658,7 +731,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_trip_photo_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/trips/trip_01/photos/photo_01_1',
             params={
                 "userToken": 'test',
@@ -669,6 +742,27 @@ class ApiTEST(unittest.TestCase):
             })
         expected_res = {
             "payload": {
+                "reducedPhoto": {
+                    "id": "photo_01_1",
+                    "accessLevel": "everyone",
+                    "tripId": "trip_01",
+                    "status": "confirmed",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "location": "Westeros",
+                    "country": "Westeros",
+                    "createTime": 1596142628628,
+                    "uploadTime": 1596142628728,
+                    "width": 768,
+                    "height": 1365,
+                    "lqSrc": "photo_1.jpg",
+                    "src": "photo_1.jpg",
+                    "likedNb": 7
+                },
                 "hqSrc": "",
                 "likedUsers": [
                     {
@@ -766,25 +860,6 @@ class ApiTEST(unittest.TestCase):
                         "likedNb": 7
                     }
                 ],
-                "id": "photo_01_1",
-                "accessLevel": "everyone",
-                "tripId": "trip_01",
-                "status": "confirmed",
-                "user": {
-                    "id": "user_001",
-                    "accessLevel": "everyone",
-                    "name": "Jon Snow",
-                    "avatarSrc": "avatar.png"
-                },
-                "location": "Westeros",
-                "country": "Westeros",
-                "createTime": 1596142628628,
-                "uploadTime": 1596142628728,
-                "width": 768,
-                "height": 1365,
-                "lqSrc": "photo_1.jpg",
-                "src": "photo_1.jpg",
-                "likedNb": 7
             },
             "feedbacks": [],
             "errors": [],
@@ -798,7 +873,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_trip_photo_comments_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/trips/trip_01/photos/photo_01_1/comments',
             params={
                 "userToken": 'test',
@@ -897,7 +972,7 @@ class ApiTEST(unittest.TestCase):
         )
 
     def test_get_comment_replies_expect_success(self):
-        response = self._get_req(
+        response = self._get_req_from_jon(
             endpoint='/trips/trip_01/photos/photo_01_1/comments/comment_02/replies',
             params={
                 "userToken": 'test',
@@ -942,3 +1017,53 @@ class ApiTEST(unittest.TestCase):
             expected_res_json_without_timestamp=expected_res,
             response=response
         )
+
+    def test_sign_up(self):
+        try:
+            res = APP.test_client().post(
+                "http://localhost:80/users/signUp",
+                json=dict(email="test@gmail.com", password="password", userName="test"))
+            payload = res.json['payload']
+            assert 'userToken' in payload and isinstance(payload['userToken'], str)
+            assert payload['user']['reducedUser']['name'] == 'test'
+            assert payload['user']['reducedUser']['accessLevel'] == 'everyone'
+            assert payload['user']['reducedUser'][
+                       'avatarSrc'] == 'http://localhost/photos/default_avatar.png'
+            assert payload['user']['isFollowedByLoginUser'] is False
+            assert res.status_code == 201
+        except Exception as e:
+            raise e
+        finally:
+            test_user = User.query.filter_by(email="test@gmail.com").first()
+            if test_user is not None:
+                db_session.delete(test_user)
+                db_session.commit()
+
+    def test_sign_in(self):
+        res = APP.test_client().post(
+            "http://localhost:80/users/signIn",
+            json=dict(email="jon@gmail.com", password="password"))
+        payload = res.json['payload']
+        assert 'userToken' in payload and isinstance(payload['userToken'], str)
+        assert payload['user']['reducedUser']['name'] == 'Jon Snow'
+        assert payload['user']['isFollowedByLoginUser'] is False
+        assert res.status_code == 200
+
+    def test_sign_out(self):
+        with APP.test_client() as c:
+            with c.session_transaction() as sess:
+                sess['_user_id'] = 'user_001'
+                sess['_fresh'] = True
+            sign_in_req = c.post(
+                "http://localhost:80/users/signIn",
+                json=dict(email='jon@gmail.com', password='password')
+            )
+            jon_user_token = sign_in_req.json['payload']['userToken']
+            default_headers = {"Content-Type": "application/json"}
+            res = c.post("http://localhost:80/users/signOut", headers=default_headers,
+                         query_string=dict(userToken=jon_user_token))
+            self._assert_response(
+                response=res,
+                expected_code=200,
+                expected_res_json_without_timestamp={'errors': [], 'feedbacks': [], 'timestamp': 1601155452818}
+            )

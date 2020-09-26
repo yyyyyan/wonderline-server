@@ -13,6 +13,7 @@ services:
       - postgres:postgres_host
     volumes:
       - ./DB_scripts:/app/DB_scripts
+      - ./tests:/app/tests
     depends_on:
       - minio
       - cassandra

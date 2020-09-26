@@ -65,3 +65,5 @@ user_mentions_parser.replace_argument(
     location='args',
     type=int
 )
+
+user_sign_out_parser = common_parser.copy()

@@ -1,9 +1,9 @@
 """
-Definition of Trip related sub models.
+Definition of Trip related sub response_models.
 """
 from flask_restplus import fields
 from wonderline_app.api.namespaces import trips_namespace
-from wonderline_app.api.users.models.models import reduced_user_model
+from wonderline_app.api.users.response_models.models import reduced_user_model
 
 reply_model = trips_namespace.model("Reply", {
     "id": fields.String(example="reply_001"),
@@ -35,7 +35,8 @@ reduced_photo_model = trips_namespace.model("ReducedPhoto", {
     "likedNb": fields.Integer(example=200)
 })
 
-photo_model = trips_namespace.inherit("Photo", reduced_photo_model, {
+photo_model = trips_namespace.model("Photo", {
+    "reducedPhoto": fields.Nested(reduced_photo_model),
     "hqSrc": fields.String(example="https://wonderline-server/images/photo.png"),
     "likedUsers": fields.List(fields.Nested(reduced_user_model)),
     "mentionedUsers": fields.List(fields.Nested(reduced_user_model)),

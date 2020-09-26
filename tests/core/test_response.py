@@ -1,4 +1,4 @@
-from wonderline_app.core.response import Response
+from wonderline_app.core.api_responses.response import Response
 
 
 # TODO: test other Response class functions

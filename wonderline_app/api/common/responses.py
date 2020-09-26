@@ -23,6 +23,8 @@ res_model = common_namespace.model("Response", {
 
 
 def create_res(namespace, name, payload_fields):
+    if payload_fields is None:
+        return res_model
     return namespace.inherit(name, res_model, {
         "payload": payload_fields
     })

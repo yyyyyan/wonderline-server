@@ -4,9 +4,11 @@ CREATE DATABASE wonderline;
 /* User is reserved word in PostgreSQL*/
 CREATE TABLE _User (
     id TEXT,
-    access_level VARCHAR(255),
+    email VARCHAR (254) UNIQUE NOT NULL,
+    password CHAR(144) NOT NULL,
+    access_level VARCHAR(255) DEFAULT 'everyone',
     name VARCHAR(255) NOT NULL,
-    avatar_src TEXT,
+    avatar_src TEXT DEFAULT '',
     create_time TIMESTAMP WITH TIME ZONE NOT NULL,
     signature TEXT,
     profile_lq_src TEXT,

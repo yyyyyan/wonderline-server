@@ -3,16 +3,18 @@ Definitions of users APIs' resources.
 """
 import logging
 
+from flask import request
 from flask_restplus import Resource
 
 from wonderline_app.api.namespaces import users_namespace
+from wonderline_app.api.users.request_models.models import user_sign_up_model, user_sign_in_model
 from wonderline_app.core.api_logics import get_user_complete_attributes, handle_request, get_user_followers, \
     get_albums_by_user, \
-    get_trips_by_user, get_highlights_by_user, get_mentions_by_user
+    get_trips_by_user, get_highlights_by_user, get_mentions_by_user, sign_up, sign_in, sign_out
 from wonderline_app.api.users.request_parsers import user_parser, user_albums_parser, followers_parser, \
-    user_trips_parser, user_highlights_parser, user_mentions_parser
+    user_trips_parser, user_highlights_parser, user_mentions_parser, user_sign_out_parser
 from wonderline_app.api.users.responses import user_res, user_albums_res, followers_res, user_trips_res, \
-    user_highlights_res, user_mentions_res
+    user_highlights_res, user_mentions_res, user_sign_up_res, user_sign_in_res, user_sign_out_res
 
 LOGGER = logging.getLogger(__name__)
 
@@ -138,4 +140,49 @@ class UserMentions(Resource):
             nb=nb,
             start_index=start_index,
             access_level=access_level
+        )
+
+
+@users_namespace.route("/signUp")
+class UserSignup(Resource):
+    @users_namespace.expect(user_sign_up_model, validate=True)
+    @users_namespace.marshal_with(user_sign_up_res)
+    def post(self):
+        email = request.json["email"]
+        user_name = request.json["userName"]
+        password = request.json["password"]
+        photo_data = request.json.get('photoData', None)
+        return handle_request(
+            func=sign_up,
+            email=email,
+            user_name=user_name,
+            password=password,
+            photo_data=photo_data
+        )
+
+
+@users_namespace.route("/signIn")
+class UserSignup(Resource):
+    @users_namespace.expect(user_sign_in_model, validate=True)
+    @users_namespace.marshal_with(user_sign_in_res)
+    def post(self):
+        email = request.json["email"]
+        password = request.json["password"]
+        return handle_request(
+            func=sign_in,
+            email=email,
+            password=password,
+        )
+
+
+@users_namespace.route("/signOut")
+class UserSignup(Resource):
+    @users_namespace.expect(user_sign_out_parser)
+    @users_namespace.marshal_with(user_sign_out_res)
+    def post(self):
+        args = user_albums_parser.parse_args()
+        user_token = args.get("userToken")
+        return handle_request(
+            func=sign_out,
+            user_token=user_token
         )

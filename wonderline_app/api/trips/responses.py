@@ -5,9 +5,9 @@ from flask_restplus import fields
 
 from wonderline_app.api.namespaces import trips_namespace
 from wonderline_app.api.common.responses import create_res
-from wonderline_app.api.trips.models.models import trip_model, reduced_photo_model
-from wonderline_app.api.trips.models.sub_models import photo_model, comment_model, reply_model
-from wonderline_app.api.users.models.models import reduced_user_model
+from wonderline_app.api.trips.response_models.models import trip_model, reduced_photo_model
+from wonderline_app.api.trips.response_models.sub_models import photo_model, comment_model, reply_model
+from wonderline_app.api.users.response_models.models import reduced_user_model
 
 trip_res = create_res(trips_namespace, "TripResponse",
                       fields.Nested(trip_model))

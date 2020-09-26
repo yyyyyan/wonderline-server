@@ -1,6 +1,8 @@
 \c wonderline;
 INSERT INTO _user (
     id,
+    email,
+    password,
     access_level,
     name,
     avatar_src,
@@ -11,6 +13,8 @@ INSERT INTO _user (
     follower_nb
 ) VALUES (
     'user_001',
+    'jon@gmail.com',
+    'sha512$TrbnVSN7$ddbd2b3d4a9b8fac597697d6659760089b47d7bd1d408bd92f48d2e5add569f01da2f56a315181b9dc9dd4656c5b8ef9c587ee113603dbc580fd69758ec19ba3',
     'everyone',
     'Jon Snow',
     'avatar.png',
@@ -23,6 +27,8 @@ INSERT INTO _user (
 
 INSERT INTO _user (
     id,
+    email,
+    password,
     access_level,
     name,
     avatar_src,
@@ -33,6 +39,8 @@ INSERT INTO _user (
     follower_nb
 ) VALUES (
     'user_002',
+    'daenerys@gmail.com',
+    'sha512$TrbnVSN7$ddbd2b3d4a9b8fac597697d6659760089b47d7bd1d408bd92f48d2e5add569f01da2f56a315181b9dc9dd4656c5b8ef9c587ee113603dbc580fd69758ec19ba3',
     'everyone',
     'Daenerys Targaryen',
     'avatar.png',
@@ -45,6 +53,8 @@ INSERT INTO _user (
 
 INSERT INTO _user (
     id,
+    email,
+    password,
     access_level,
     name,
     avatar_src,
@@ -55,6 +65,8 @@ INSERT INTO _user (
     follower_nb
 ) VALUES (
     'user_003',
+    'red_dragon@gmail.com',
+    'sha512$TrbnVSN7$ddbd2b3d4a9b8fac597697d6659760089b47d7bd1d408bd92f48d2e5add569f01da2f56a315181b9dc9dd4656c5b8ef9c587ee113603dbc580fd69758ec19ba3',
     'everyone',
     'Red Dragon',
     'avatar.png',
@@ -67,6 +79,8 @@ INSERT INTO _user (
 
 INSERT INTO _user (
     id,
+    email,
+    password,
     access_level,
     name,
     avatar_src,
@@ -77,6 +91,8 @@ INSERT INTO _user (
     follower_nb
 ) VALUES (
     'user_004',
+    'blue_dragon@gmail.com',
+    'sha512$TrbnVSN7$ddbd2b3d4a9b8fac597697d6659760089b47d7bd1d408bd92f48d2e5add569f01da2f56a315181b9dc9dd4656c5b8ef9c587ee113603dbc580fd69758ec19ba3',
     'everyone',
     'Blue Dragon',
     'avatar.png',
@@ -89,6 +105,8 @@ INSERT INTO _user (
 
 INSERT INTO _user (
     id,
+    email,
+    password,
     access_level,
     name,
     avatar_src,
@@ -99,6 +117,8 @@ INSERT INTO _user (
     follower_nb
 ) VALUES (
     'user_005',
+    'samwell@gmail.com',
+    'sha512$TrbnVSN7$ddbd2b3d4a9b8fac597697d6659760089b47d7bd1d408bd92f48d2e5add569f01da2f56a315181b9dc9dd4656c5b8ef9c587ee113603dbc580fd69758ec19ba3',
     'everyone',
     'Samwell Tarly',
     'avatar.png',
@@ -111,6 +131,8 @@ INSERT INTO _user (
 
 INSERT INTO _user (
     id,
+    email,
+    password,
     access_level,
     name,
     avatar_src,
@@ -121,6 +143,8 @@ INSERT INTO _user (
     follower_nb
 ) VALUES (
     'user_006',
+    'cersei@gmail.com',
+    'sha512$TrbnVSN7$ddbd2b3d4a9b8fac597697d6659760089b47d7bd1d408bd92f48d2e5add569f01da2f56a315181b9dc9dd4656c5b8ef9c587ee113603dbc580fd69758ec19ba3',
     'everyone',
     'Cersei Lannister',
     'avatar.png',
@@ -133,6 +157,8 @@ INSERT INTO _user (
 
 INSERT INTO _user (
     id,
+    email,
+    password,
     access_level,
     name,
     avatar_src,
@@ -143,6 +169,8 @@ INSERT INTO _user (
     follower_nb
 ) VALUES (
     'user_007',
+    'night_king@gmail.com',
+    'sha512$TrbnVSN7$ddbd2b3d4a9b8fac597697d6659760089b47d7bd1d408bd92f48d2e5add569f01da2f56a315181b9dc9dd4656c5b8ef9c587ee113603dbc580fd69758ec19ba3',
     'everyone',
     'Night King',
     'avatar.png',

@@ -239,7 +239,7 @@ class Photo(Model):
 
     def to_dict(self) -> Dict:
         return {
-            **self.to_reduced_photo_dict(),
+            "reducedPhoto": self.to_reduced_photo_dict(),
             "hqSrc": self.high_quality_src,
             "likedUsers": [u.to_reduced_dict() for u in self.liked_users],
             "mentionedUsers": [u.to_reduced_dict() for u in self.mentioned_users],
@@ -330,7 +330,7 @@ class Trip(Model):
 
     def to_dict(self) -> Dict:
         return {
-            **self.to_reduced_dict(),
+            "reducedTrip": self.to_reduced_dict(),
             "likedNb": self.liked_nb,
             "sharedNb": self.shared_nb,
             "savedNb": self.saved_nb
@@ -377,6 +377,7 @@ class TripsByUser(Model):
     create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
     trip_id = columns.Text(primary_key=True, clustering_order="DESC")
     access_level = columns.Text()
+    status = columns.Text()
     name = columns.Text()
     description = columns.Text()
     users = columns.Set(columns.Text())
@@ -387,10 +388,11 @@ class TripsByUser(Model):
 
     def to_dict(self) -> Dict:
         return {
-            "id": self.user_id,
+            "id": self.trip_id,
             "createTime": convert_date_to_timestamp(self.create_time),
             "tripTd": self.trip_id,
             "accessLevel": self.access_level,
+            "status": self.status,
             "name": self.name,
             "description": self.description,
             "users": [u.to_reduced_dict() for u in self.users],
