@@ -6,14 +6,14 @@ import logging
 from typing import Dict, List, Optional, Callable, Union, Tuple
 
 from flask_login import login_user, current_user, logout_user
-from wonderline_app.api.common.enums import AccessLevel
+from wonderline_app.api.common.enums import AccessLevel, SortType, SearchSortType, TripStatus
 from wonderline_app.core.api_responses.api_errors import APIError, APIError404, APIError500, APIError401, APIError409
 from wonderline_app.core.api_responses.api_feedbacks import APIFeedback201
 from wonderline_app.core.image_service import ImageSize, upload_encoded_image, DEFAULT_AVATAR_URL
 from wonderline_app.core.api_responses.response import Response, Error, Feedback
 from wonderline_app.db.cassandra.exceptions import TripNotFound, CommentNotFound, PhotoNotFound
 from wonderline_app.db.cassandra.models import AlbumsByUser, TripsByUser, HighlightsByUser, MentionsByUser, Trip, \
-    PhotosByTrip, CommentsByPhoto, Photo, Comment
+    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.models import User
@@ -117,7 +117,8 @@ def get_trip(trip_id: str) -> Trip:
 
 
 @user_token_required
-def get_user_complete_attributes(user_id: str, followers_sort_type: str = "createTime", follower_nb: int = 6) -> Dict:
+def get_user_complete_attributes(user_id: str, followers_sort_type: str = SortType.CREATE_TIME.value,
+                                 follower_nb: int = 6) -> Dict:
     """Get user's complete attributes including followers reduced attributes."""
     user = _get_user(user_id=user_id)
     LOGGER.info(f"Getting complete user information for {user_id}")
@@ -143,7 +144,7 @@ def get_user_followers(user_id: str, sort_type: str = "creteTime", nb: int = 50,
 
 @user_token_required
 def get_albums_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, start_index: int = 0,
-                       access_level: str = AccessLevel.everyone.name) -> List[Dict]:
+                       access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the albums for the user."""
     user = _get_user(user_id=user_id)
     if user:
@@ -158,7 +159,7 @@ def get_albums_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, 
 
 @user_token_required
 def get_trips_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, start_index: int = 0,
-                      access_level: str = AccessLevel.everyone.name) -> List[Dict]:
+                      access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the trips for the user."""
     user = _get_user(user_id=user_id)
     if user:
@@ -173,7 +174,7 @@ def get_trips_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, s
 
 @user_token_required
 def get_highlights_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, start_index: int = 0,
-                           access_level: str = AccessLevel.everyone.name) -> List[Dict]:
+                           access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the highlights for the user."""
     user = _get_user(user_id=user_id)
     if user:
@@ -188,7 +189,7 @@ def get_highlights_by_user(user_id: str, sort_type: str = "creteTime", nb: int =
 
 @user_token_required
 def get_mentions_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 12, start_index: int = 0,
-                         access_level: str = AccessLevel.everyone.name) -> List[Dict]:
+                         access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the mentions for the user."""
     user = _get_user(user_id=user_id)
     if user:
@@ -202,13 +203,13 @@ def get_mentions_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 1
 
 
 @user_token_required
-def get_complete_trip(trip_id: str, users_sort_type: str = "createTime", user_nb: int = 6) -> Dict:
+def get_complete_trip(trip_id: str, users_sort_type: str = SortType.CREATE_TIME.value) -> Dict:
     """Get complete attributes for the trip."""
     trip = get_trip(trip_id=trip_id)
     LOGGER.info(f"Getting complete trip information for {trip_id}")
     return trip.get_complete_attributes(
         users_sort_type=users_sort_type,
-        user_nb=user_nb,
+        user_nb=-1,
     )
 
 
@@ -226,7 +227,7 @@ def get_users_by_trip(trip_id: str, sort_type: str = "creteTime", nb: int = 12, 
 
 @user_token_required
 def get_photos_by_trip(trip_id: str, sort_type: str = "creteTime", nb: int = 12, start_index: int = 0,
-                       access_level: str = AccessLevel.everyone.name) -> List[Dict]:
+                       access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the photos for the trip."""
     trip = get_trip(trip_id=trip_id)
     if trip:
@@ -341,3 +342,71 @@ def sign_out():
         if not logout_user():
             APIError500(f"User {current_user} failed to sign out")
     return {}
+
+
+@user_token_required
+def create_new_trip(owner_id: str, trip_name: str, user_ids: List[str], users_sort_type: str):
+    new_trip = create_and_return_new_trip(owner_id, trip_name, user_ids)
+    if new_trip:
+        return new_trip.get_complete_attributes(users_sort_type=users_sort_type, user_nb=-1), APIFeedback201(
+            message=f"Trip '{trip_name}' successfully created")
+    else:
+        raise APIError500("Failed to create new trip, please check the server log")
+
+
+@user_token_required
+def update_trip(trip_id: str, name: str, description: str, user_ids: List[str]):
+    try:
+        trip = Trip.get_trip_by_trip_id(trip_id=trip_id)
+    except TripNotFound:
+        raise APIError404(message=f"Trip {trip_id} is not found")
+
+    # name, description and user_ids are optional arguments
+    # so, when the value is None, no need to update
+    attributes_to_update = {}
+    if name is not None:
+        attributes_to_update['name'] = name
+    if description is not None:
+        attributes_to_update['description'] = description
+
+    if user_ids is not None:
+        old_user_ids = set(trip.users)
+        new_user_ids = set(user_ids)
+        user_ids_to_add = new_user_ids - old_user_ids
+        user_ids_to_update = new_user_ids & old_user_ids
+        user_ids_to_delete = old_user_ids - new_user_ids
+        attributes_to_update['users'] = new_user_ids
+        # update TripsByUser
+        for user_id in user_ids_to_add:
+            TripsByUser.create(
+                user_id=user_id,
+                create_time=trip.create_time,
+                trip_id=trip_id,
+                owner_id=trip.owner_id,
+                access_level=AccessLevel.EVERYONE.value,
+                status=TripStatus.EDITING.value,
+                **attributes_to_update,
+                begin_time=None,
+                end_time=None,
+                photo_nb=0
+            )
+        for user_id in user_ids_to_update:
+            TripsByUser.get(user_id=user_id, trip_id=trip_id, create_time=trip.create_time).update(
+                **attributes_to_update
+            )
+        for user_id in user_ids_to_delete:
+            TripsByUser.get(user_id=user_id, trip_id=trip_id, create_time=trip.create_time).delete()
+    # update Trip
+    trip.update(**attributes_to_update)
+    return trip.get_complete_attributes(users_sort_type=SortType.CREATE_TIME.value, user_nb=-1)
+
+
+@user_token_required
+def search_users(query: str, users_sort_type: str = SearchSortType.BEST_MATCH.value, start_index: int = 0,
+                 nb: int = 12) -> List[Dict]:
+    return User.search_users(
+        name_query=query,
+        start_index=start_index,
+        nb=nb,
+        sort_type=users_sort_type
+    )

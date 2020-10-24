@@ -9,7 +9,7 @@ user_parser.add_argument(
     "followersSortType",
     type=str,
     choices=get_enum_names(SortType),
-    default=SortType.createTime.name,
+    default=SortType.CREATE_TIME.value,
     location='args',
     help="Sort followers by followersSortType")
 user_parser.add_argument(
@@ -25,7 +25,7 @@ followers_parser.add_argument(
     type=str,
     choices=get_enum_names(SortType),
     location='args',
-    default=SortType.createTime.name)
+    default=SortType.CREATE_TIME.value)
 followers_parser.add_argument(
     'startIndex',
     type=int,
@@ -49,7 +49,7 @@ user_trips_parser.add_argument(
     type=str,
     choices=get_enum_names(AccessLevel),
     location='args',
-    default=AccessLevel.everyone.name)
+    default=AccessLevel.EVERYONE.value)
 
 # Same structure as user_trips_parser
 user_highlights_parser = user_trips_parser.copy()

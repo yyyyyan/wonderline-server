@@ -162,7 +162,7 @@ class UserSignup(Resource):
 
 
 @users_namespace.route("/signIn")
-class UserSignup(Resource):
+class UserSignIn(Resource):
     @users_namespace.expect(user_sign_in_model, validate=True)
     @users_namespace.marshal_with(user_sign_in_res)
     def post(self):
@@ -176,7 +176,7 @@ class UserSignup(Resource):
 
 
 @users_namespace.route("/signOut")
-class UserSignup(Resource):
+class UserSignOut(Resource):
     @users_namespace.expect(user_sign_out_parser)
     @users_namespace.marshal_with(user_sign_out_res)
     def post(self):

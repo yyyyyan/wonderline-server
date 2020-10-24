@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS photo (
 
 CREATE TABLE IF NOT EXISTS trip (
     trip_id uuid,
+    owner_id uuid,
     access_level text,
     status text,
     name text,
@@ -102,6 +103,7 @@ CREATE TABLE IF NOT EXISTS trip (
 CREATE TABLE IF NOT EXISTS trips_by_user (
     user_id uuid,
     trip_id uuid,
+    owner_id uuid,
     access_level text,
     status text,
     name text,

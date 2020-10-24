@@ -4,28 +4,35 @@ Definition of common Enums used within API.
 from enum import Enum, auto
 
 
-class AccessLevel(Enum):
-    everyone = auto()
+class ExplicitEnum(Enum):
+    """
+    Enum with more explicit error message for missing values.
+    """
+
+    @classmethod
+    def _missing_(cls, value):
+        raise ValueError(
+            "%r is not a valid %s, please select one of %s"
+            % (value, cls.__name__, str(list(cls._value2member_map_.keys())))
+        )
 
 
-class Status(Enum):
-    editing = auto()
-    confirmed = auto()
+class AccessLevel(ExplicitEnum):
+    EVERYONE = 'everyone'
 
 
-class SortType(Enum):
-    createTime = auto()  # the value of the enum doesn't matter, so use auto()
+class TripStatus(ExplicitEnum):
+    EDITING = 'editing'
+    CONFIRMED = 'confirmed'
 
 
-class FeedbackCode(Enum):
-    success = auto()
+class SortType(ExplicitEnum):
+    CREATE_TIME = 'createTime'
 
 
-class ErrorCode(Enum):
-    serverError = auto()
-    badRequest = auto()
-    resourceNotFound = auto()
+class SearchSortType(ExplicitEnum):
+    BEST_MATCH = 'bestMatch'
 
 
 def get_enum_names(enum: Enum):
-    return [name for name, _ in enum.__members__.items()]
+    return [item.value for _, item in enum.__members__.items()]

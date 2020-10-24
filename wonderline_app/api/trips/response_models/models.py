@@ -8,6 +8,7 @@ from wonderline_app.api.trips.response_models.sub_models import reduced_photo_mo
 
 reduced_trip_model = trips_namespace.model("ReducedTrip", {
     "id": fields.String(example="trip_01"),
+    "ownerId": fields.String(example="user_001"),
     "accessLevel": fields.String(example="everyone"),
     "status": fields.String(example="confirmed"),
     "name": fields.String(example="Winter is here"),
@@ -17,7 +18,7 @@ reduced_trip_model = trips_namespace.model("ReducedTrip", {
     "beginTime": fields.Integer(example=1596134628628),
     "endTime": fields.Integer(example=1596135628628),
     "photoNb": fields.Integer(example=9),
-    "coverPhoto": fields.Nested(reduced_photo_model)
+    "coverPhoto": fields.Nested(reduced_photo_model, allow_null=True)
 })
 
 trip_model = trips_namespace.model("Trip", {

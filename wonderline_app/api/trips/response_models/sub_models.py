@@ -15,7 +15,7 @@ reply_model = trips_namespace.model("Reply", {
 
 comment_model = trips_namespace.inherit("Comment", reply_model, {
     "replyNb": fields.Integer(example=1),
-    "replies": fields.List(fields.Nested(reply_model))
+    "replies": fields.List(fields.Nested(reply_model, allow_null=True))
 })
 
 reduced_photo_model = trips_namespace.model("ReducedPhoto", {
@@ -41,5 +41,5 @@ photo_model = trips_namespace.model("Photo", {
     "likedUsers": fields.List(fields.Nested(reduced_user_model)),
     "mentionedUsers": fields.List(fields.Nested(reduced_user_model)),
     "commentNb": fields.Integer(example=15),
-    "comments": fields.List(fields.Nested(comment_model))
+    "comments": fields.List(fields.Nested(comment_model, allow_null=True))
 })

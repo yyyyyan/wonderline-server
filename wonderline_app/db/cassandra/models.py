@@ -4,24 +4,25 @@ Cassandra ORM.
 from __future__ import annotations
 
 import logging
-from typing import List, Dict, Type
-
+from typing import List, Dict, Type, Optional
+import uuid
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.columns import UserDefinedType
 from cassandra.cqlengine.models import Model
-from cassandra.cqlengine.query import DoesNotExist
+from cassandra.cqlengine.query import DoesNotExist, LWTException
 from cassandra.cqlengine.usertype import UserType
 
+from wonderline_app.api.common.enums import SortType, AccessLevel, TripStatus
 from wonderline_app.db.cassandra.exceptions import PhotoNotFound, TripNotFound, CommentNotFound
 from wonderline_app.db.postgres.exceptions import UserNotFound
 from wonderline_app.db.postgres.models import User
-from wonderline_app.utils import convert_date_to_timestamp
+from wonderline_app.utils import convert_date_to_timestamp_in_ms_unit, get_utc_with_delta
 
 LOGGER = logging.getLogger(__name__)
 
 # mapping from camel case to snake case
 SORTING_MAPPING = {
-    'createTime': 'create_time'
+    SortType.CREATE_TIME.value: 'create_time'
 }
 
 
@@ -47,7 +48,7 @@ class Reply(UserType):
         return {
             "id": self.reply_id,
             "user": User.get_user_attributes_or_none(user_id=self.user, reduced=True),
-            "createTime": convert_date_to_timestamp(self.create_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
             "content": self.content,
             "likedNb": self.liked_nb
         }
@@ -83,8 +84,8 @@ class ReducedPhoto(UserType):
             "status": self.status,
             "location": self.location,
             "country": self.country,
-            "createTime": convert_date_to_timestamp(self.create_time),
-            "uploadTime": convert_date_to_timestamp(self.upload_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "uploadTime": convert_date_to_timestamp_in_ms_unit(self.upload_time),
             "width": self.width,
             "height": self.height,
             "lqSrc": self.low_quality_src,
@@ -127,7 +128,7 @@ class Comment(Model):
     def to_dict(self) -> Dict:
         return {
             "id": self.comment_id,
-            "createTime": convert_date_to_timestamp(self.create_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
             "user": self.user,
             "content": self.content,
             "likedNb": self.liked_nb,
@@ -169,7 +170,7 @@ class CommentsByPhoto(Model):
     def to_dict(self) -> Dict:
         return {
             "id": self.comment_id,
-            "createTime": convert_date_to_timestamp(self.create_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
             "user": User.get_user_attributes_or_none(user_id=self.user, reduced=True),
             "content": self.content,
             "likedNb": self.liked_nb,
@@ -189,7 +190,7 @@ class CommentsByPhoto(Model):
         return replies
 
     @classmethod
-    def get_comments_objects(cls, photo_id: str, sort_by: str = "createTime", nb: int = 6) \
+    def get_comments_objects(cls, photo_id: str, sort_by: str = SortType.CREATE_TIME.value, nb: int = 6) \
             -> List[CommentsByPhoto]:
         try:
             comments = cls.objects(photo_id=photo_id)
@@ -205,7 +206,7 @@ class CommentsByPhoto(Model):
         return comments
 
     @classmethod
-    def get_comments(cls, photo_id: str, sort_by: str = "createTime", nb: int = 6) -> List[Dict]:
+    def get_comments(cls, photo_id: str, sort_by: str = SortType.CREATE_TIME.value, nb: int = 6) -> List[Dict]:
         comments = cls.get_comments_objects(
             photo_id=photo_id,
             sort_by=sort_by,
@@ -256,8 +257,8 @@ class Photo(Model):
             "status": self.status,
             "location": self.location,
             "country": self.country,
-            "createTime": convert_date_to_timestamp(self.create_time),
-            "uploadTime": convert_date_to_timestamp(self.upload_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "uploadTime": convert_date_to_timestamp_in_ms_unit(self.upload_time),
             "width": self.width,
             "height": self.height,
             "lqSrc": self.low_quality_src,
@@ -297,12 +298,13 @@ class Photo(Model):
         mentioned_users.sort(key=lambda x: getattr(x, sort_by))
         return mentioned_users[:nb]
 
-    def get_photo_information(self, photo_id: str, liked_users_sort_by: str = 'createTime', liked_user_nb: int = 6,
-                              comments_sort_by: str = "createTime",
+    def get_photo_information(self, photo_id: str, liked_users_sort_by: str = SortType.CREATE_TIME.value,
+                              liked_user_nb: int = 6,
+                              comments_sort_by: str = SortType.CREATE_TIME.value,
                               comment_nb: int = 6) -> Dict:
         photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
         photo.liked_users = self.get_liked_users_info(sort_by=liked_users_sort_by, nb=liked_user_nb)
-        photo.mentioned_users = self.get_mentioned_users_info(sort_by='createTime')
+        photo.mentioned_users = self.get_mentioned_users_info(sort_by=SortType.CREATE_TIME.value)
         photo.comments = CommentsByPhoto.get_comments_objects(
             photo_id=photo_id,
             sort_by=comments_sort_by,
@@ -314,6 +316,7 @@ class Trip(Model):
     __table_name__ = "trip"
 
     trip_id = columns.Text(primary_key=True)
+    owner_id = columns.Text()
     access_level = columns.Text()
     status = columns.Text()
     name = columns.Text()
@@ -339,16 +342,17 @@ class Trip(Model):
     def to_reduced_dict(self) -> Dict:
         return {
             "id": self.trip_id,
+            "ownerId": self.owner_id,
             "accessLevel": self.access_level,
             "status": self.status,
             "name": self.name,
             "description": self.description,
             "users": [u.to_reduced_dict() for u in self.users],
-            "createTime": convert_date_to_timestamp(self.create_time),
-            "beginTime": convert_date_to_timestamp(self.begin_time),
-            "endTime": convert_date_to_timestamp(self.end_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "beginTime": convert_date_to_timestamp_in_ms_unit(self.begin_time) if self.begin_time else None,
+            "endTime": convert_date_to_timestamp_in_ms_unit(self.end_time) if self.end_time else None,
             "photoNb": self.photo_nb,
-            "coverPhoto": self.cover_photo.to_dict()
+            "coverPhoto": self.cover_photo.to_dict() if self.cover_photo else None
         }
 
     @classmethod
@@ -376,6 +380,7 @@ class TripsByUser(Model):
     user_id = columns.Text(primary_key=True)
     create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
     trip_id = columns.Text(primary_key=True, clustering_order="DESC")
+    owner_id = columns.Text()
     access_level = columns.Text()
     status = columns.Text()
     name = columns.Text()
@@ -389,15 +394,16 @@ class TripsByUser(Model):
     def to_dict(self) -> Dict:
         return {
             "id": self.trip_id,
-            "createTime": convert_date_to_timestamp(self.create_time),
+            "ownerId": self.owner_id,
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
             "tripTd": self.trip_id,
             "accessLevel": self.access_level,
             "status": self.status,
             "name": self.name,
             "description": self.description,
             "users": [u.to_reduced_dict() for u in self.users],
-            "beginTime": convert_date_to_timestamp(self.begin_time),
-            "endTime": convert_date_to_timestamp(self.end_time),
+            "beginTime": convert_date_to_timestamp_in_ms_unit(self.begin_time) if self.begin_time else None,
+            "endTime": convert_date_to_timestamp_in_ms_unit(self.end_time) if self.end_time else None,
             "photoNb": self.photo_nb,
             "coverPhoto": self.cover_photo.to_reduced_photo_dict() if self.cover_photo else None
         }
@@ -443,14 +449,14 @@ class PhotosByTrip(Model):
     def to_dict(self) -> Dict:
         return {
             "tripId": self.trip_id,
-            "createTime": convert_date_to_timestamp(self.create_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
             "id": self.photo_id,
             "user": User.get_user_attributes_or_none(user_id=self.owner, reduced=True),
             "accessLevel": self.access_level,
             "status": self.status,
             "location": self.location,
             "country": self.country,
-            "uploadTime": convert_date_to_timestamp(self.upload_time),
+            "uploadTime": convert_date_to_timestamp_in_ms_unit(self.upload_time),
             "width": self.width,
             "height": self.height,
             "lqSrc": self.low_quality_src,
@@ -503,7 +509,7 @@ class AlbumsByUser(Model):
         return {
             "id": self.album_id,
             "accessLevel": self.access_level,
-            "createTime": convert_date_to_timestamp(self.create_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
             "coverPhotos": [photo.to_dict() for photo in self.cover_photos]
         }
 
@@ -535,7 +541,7 @@ class MentionsByUser(Model):
             "id": self.mention_id,
             "photo": self.photo.to_dict(),
             "accessLevel": self.access_level,
-            "createTime": convert_date_to_timestamp(self.create_time),
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
         }
 
 
@@ -573,5 +579,63 @@ class HighlightsByUser(Model):
             "accessLevel": self.access_level,
             "coverPhoto": self.cover_photo.to_dict() if self.cover_photo else None,
             "description": self.description,
-            "createTime": convert_date_to_timestamp(self.create_time)
+            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time)
         }
+
+
+def create_and_return_new_trip(owner_id: str, trip_name: str, user_ids: List[str]) -> Optional[Trip]:
+    if user_ids is None or not len(user_ids):
+        user_ids = [owner_id]
+
+    create_time = get_utc_with_delta(delta=2).timestamp()  # get UTC+2 (french time)
+    trip_id = str(uuid.uuid1())
+    try:
+        new_trip = Trip.if_not_exists().create(
+            trip_id=trip_id,
+            owner_id=owner_id,
+            access_level=AccessLevel.EVERYONE.value,
+            status=TripStatus.EDITING.value,
+            name=trip_name,
+            description="",
+            users=user_ids,
+            create_time=create_time,
+            begin_time=None,
+            end_time=None,
+            photo_nb=0,
+            liked_nb=0,
+            shared_nb=0,
+            saved_nb=0
+        )
+    except LWTException as exp:
+        LOGGER.warning(f"Failed to create a new trip with trip_id:{trip_id})")
+        LOGGER.warning(f"{exp.existing}")
+        return None
+    for user_id in user_ids:
+        TripsByUser.create(
+            user_id=user_id,
+            create_time=create_time,
+            trip_id=trip_id,
+            owner_id=owner_id,
+            access_level=AccessLevel.EVERYONE.value,
+            status=TripStatus.EDITING.value,
+            name=trip_name,
+            description="",
+            users=user_ids,
+            begin_time=None,
+            end_time=None,
+            photo_nb=0
+        )
+    return new_trip
+
+
+def delete_trip_id(trip_id: str):
+    # only used for integration test
+    trip = Trip.get_trip_by_trip_id(trip_id=trip_id)
+    for user_id in trip.users:
+        trips_by_user_record = TripsByUser.get(
+            user_id=user_id,
+            trip_id=trip_id,
+            create_time=trip.create_time
+        )
+        trips_by_user_record.delete()
+    trip.delete()

@@ -10,12 +10,7 @@ trip_parser.add_argument(
     type=str,
     choices=get_enum_names(SortType),
     location='args',
-    default=SortType.createTime.name)
-trip_parser.add_argument(
-    'userNb',
-    type=int,
-    location='args',
-    default=6)
+    default=SortType.CREATE_TIME.value)
 
 trip_users_parser = common_parser.copy()
 trip_users_parser.add_argument(
@@ -23,7 +18,7 @@ trip_users_parser.add_argument(
     type=str,
     choices=get_enum_names(SortType),
     location='args',
-    default=SortType.createTime.name)
+    default=SortType.CREATE_TIME.value)
 trip_users_parser.add_argument(
     'startIndex',
     type=int,
@@ -47,7 +42,7 @@ trip_photos_parser.add_argument(
     type=str,
     choices=get_enum_names(AccessLevel),
     location='args',
-    default=AccessLevel.everyone.name)
+    default=AccessLevel.EVERYONE.value)
 
 trip_photo_parser = common_parser.copy()
 trip_photo_parser.add_argument(
@@ -55,7 +50,7 @@ trip_photo_parser.add_argument(
     type=str,
     choices=get_enum_names(SortType),
     location='args',
-    default=SortType.createTime.name)
+    default=SortType.CREATE_TIME.value)
 trip_photo_parser.add_argument(
     'likedUserNb',
     type=int,
@@ -66,7 +61,7 @@ trip_photo_parser.add_argument(
     type=str,
     choices=get_enum_names(SortType),
     location='args',
-    default=SortType.createTime.name)
+    default=SortType.CREATE_TIME.value)
 trip_photo_parser.add_argument(
     'commentNb',
     type=int,
@@ -79,7 +74,7 @@ photo_comments_parser.add_argument(
     type=str,
     choices=get_enum_names(SortType),
     location='args',
-    default=SortType.createTime.name)
+    default=SortType.CREATE_TIME.value)
 photo_comments_parser.add_argument(
     'replyNb',
     type=int,
@@ -92,7 +87,7 @@ comment_replies_parser.add_argument(
     type=str,
     choices=get_enum_names(SortType),
     location='args',
-    default=SortType.createTime.name)
+    default=SortType.CREATE_TIME.value)
 comment_replies_parser.add_argument(
     'startIndex',
     type=int,

@@ -16,7 +16,7 @@ reduced_user_model = users_namespace.model("ReducedUser", {
 })
 
 user_model = users_namespace.model("User", {
-    "reducedUser": fields.Nested(reduced_user_model),
+    "reducedUser": fields.Nested(reduced_user_model, allow_null=True),
     "createTime": fields.Integer(example=1596134528628),
     "signature": fields.String(example="The king of the North, Danny is my QUEEN!"),
     "profileLqSrc": fields.String(example="http://wonderline-server/images/bkg.png"),

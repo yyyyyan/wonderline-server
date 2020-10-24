@@ -19,11 +19,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from wonderline_app.api.common.enums import SortType, SearchSortType
 from wonderline_app.core.image_service import DEFAULT_AVATAR_URL
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.init import db_session, postgres_meta_data
-from wonderline_app.utils import convert_date_to_timestamp
+from wonderline_app.utils import convert_date_to_timestamp_in_ms_unit, edit_distance
 
 LOGGER = logging.getLogger(__name__)
 
@@ -138,7 +139,7 @@ class User(Base, UserMixin):
         return None
 
     @classmethod
-    def get_users_by_ids(cls, user_ids: List[str], sort_by: str = "createTime", sort_desc: bool = True,
+    def get_users_by_ids(cls, user_ids: List[str], sort_by: str = SortType.CREATE_TIME.value, sort_desc: bool = True,
                          start_index: int = 0,
                          user_nb: int = 6) -> List[User]:
         if user_ids is None or not len(user_ids):
@@ -147,9 +148,13 @@ class User(Base, UserMixin):
             sort_order = desc
         else:
             sort_order = asc
+        if user_nb == -1:  # when user_nb is -1, get all the users starting from start_index
+            end_index = None
+        else:
+            end_index = start_index + user_nb
         return cls.query.filter(cls.id.in_(user_ids)). \
             order_by(sort_order(getattr(User, sort_by))). \
-            slice(start_index, start_index + user_nb). \
+            slice(start_index, end_index). \
             all()
 
     def to_reduced_dict(self) -> Dict:
@@ -163,10 +168,11 @@ class User(Base, UserMixin):
             if attr_key in self.__reduced_keys:
                 user_dict['reducedUser'][attr_key] = user_dict[attr_key]
                 del user_dict[attr_key]
-        user_dict['createTime'] = convert_date_to_timestamp(user_dict['createTime'])
+        user_dict['createTime'] = convert_date_to_timestamp_in_ms_unit(user_dict['createTime'])
         return user_dict
 
-    def get_complete_attributes(self, follower_nb: int, sort_by: str = "createTime", start_index: int = 0) -> Dict:
+    def get_complete_attributes(self, follower_nb: int, sort_by: str = SortType.CREATE_TIME.value,
+                                start_index: int = 0) -> Dict:
         """The returned dictionary contains the information about followers"""
         user_dict = self.to_dict()
         user_dict['followers'] = self.get_followers_with_reduced_attributes(
@@ -176,7 +182,8 @@ class User(Base, UserMixin):
         user_dict['isFollowedByLoginUser'] = current_user.id in (u.to_id for u in self.followers)
         return user_dict
 
-    def get_followers(self, follower_nb: int, sort_by: str = "createTime", start_index: int = 0) -> List[User]:
+    def get_followers(self, follower_nb: int, sort_by: str = SortType.CREATE_TIME.value, start_index: int = 0) -> List[
+        User]:
         return User.query. \
             join(Followed, User.id == Followed.to_id). \
             filter(Followed.from_id == self.id). \
@@ -184,7 +191,7 @@ class User(Base, UserMixin):
             slice(start_index, start_index + follower_nb). \
             all()
 
-    def get_followers_with_reduced_attributes(self, follower_nb: int, sort_by: str = "createTime",
+    def get_followers_with_reduced_attributes(self, follower_nb: int, sort_by: str = SortType.CREATE_TIME.value,
                                               start_index: int = 0) -> List[Dict]:
         if follower_nb <= 0:
             return []
@@ -196,6 +203,20 @@ class User(Base, UserMixin):
             start_index=start_index
         )
         return [follower.to_reduced_dict() for follower in followers]
+
+    @staticmethod
+    def search_users(name_query: str, start_index: int = 0, nb: int = 12,
+                     sort_type: str = SearchSortType.BEST_MATCH.value) -> List[Dict]:
+        if name_query is None or not len(name_query):
+            return []
+        matched_users = User.query.filter(User.name.ilike(f"%{name_query}%")).all()
+        if sort_type == SearchSortType.BEST_MATCH.value:
+            matched_users.sort(key=lambda x: edit_distance(word1=name_query, word2=x.name))
+        else:
+            raise ValueError("Unknown sort_type for searching users")
+        if matched_users:
+            return [u.to_reduced_dict() for u in matched_users[start_index: start_index + nb]]
+        return []
 
 
 class Following(Base):

@@ -380,6 +380,7 @@ INSERT INTO photo (
 
 INSERT INTO trip (
     trip_id,
+    owner_id,
     access_level,
     status,
     name,
@@ -395,6 +396,7 @@ INSERT INTO trip (
     saved_nb
 ) VALUES (
     'trip_01',
+    'user_001',
     'everyone',
     'confirmed',
     'The Winds of Winter',
@@ -427,6 +429,7 @@ INSERT INTO trip (
 
 INSERT INTO trips_by_user (
     user_id,
+    owner_id,
     trip_id,
     access_level,
     status,
@@ -439,6 +442,7 @@ INSERT INTO trips_by_user (
     photo_nb,
     cover_photo
 ) VALUES (
+    'user_001',
     'user_001',
     'trip_01',
     'everyone',
@@ -455,6 +459,7 @@ INSERT INTO trips_by_user (
 
 INSERT INTO trips_by_user (
     user_id,
+    owner_id,
     trip_id,
     access_level,
     status,
@@ -468,6 +473,7 @@ INSERT INTO trips_by_user (
     cover_photo
 ) VALUES (
     'user_002',
+    'user_001',
     'trip_01',
     'everyone',
     'confirmed',
@@ -483,6 +489,7 @@ INSERT INTO trips_by_user (
 
 INSERT INTO trips_by_user (
     user_id,
+    owner_id,
     trip_id,
     access_level,
     status,
@@ -496,6 +503,7 @@ INSERT INTO trips_by_user (
     cover_photo
 ) VALUES (
     'user_003',
+    'user_001',
     'trip_01',
     'everyone',
     'confirmed',
@@ -511,6 +519,7 @@ INSERT INTO trips_by_user (
 
 INSERT INTO trips_by_user (
     user_id,
+    owner_id,
     trip_id,
     access_level,
     status,
@@ -524,6 +533,7 @@ INSERT INTO trips_by_user (
     cover_photo
 ) VALUES (
     'user_004',
+    'user_001',
     'trip_01',
     'everyone',
     'confirmed',
@@ -539,6 +549,7 @@ INSERT INTO trips_by_user (
 
 INSERT INTO trips_by_user (
     user_id,
+    owner_id,
     trip_id,
     access_level,
     status,
@@ -552,6 +563,7 @@ INSERT INTO trips_by_user (
     cover_photo
 ) VALUES (
     'user_005',
+    'user_001',
     'trip_01',
     'everyone',
     'confirmed',
@@ -567,6 +579,7 @@ INSERT INTO trips_by_user (
 
 INSERT INTO trips_by_user (
     user_id,
+    owner_id,
     trip_id,
     access_level,
     status,
@@ -580,6 +593,7 @@ INSERT INTO trips_by_user (
     cover_photo
 ) VALUES (
     'user_007',
+    'user_001',
     'trip_01',
     'everyone',
     'confirmed',

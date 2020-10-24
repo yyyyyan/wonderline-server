@@ -10,7 +10,7 @@ from wonderline_app.api.users.response_models.models import reduced_user_model, 
 from wonderline_app.api.users.response_models.sub_models import reduced_album_model, reduced_highlight_model, \
     mention_model
 
-user_res = create_res(users_namespace, "UserResponse", fields.Nested(user_model))
+user_res = create_res(users_namespace, "UserResponse", fields.Nested(user_model, allow_null=True))
 
 followers_res = create_res(users_namespace, "FollowerResponse",
                            fields.List(fields.Nested(reduced_user_model)))

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Dict
 
-from wonderline_app.utils import convert_date_to_timestamp
+from wonderline_app.utils import convert_date_to_timestamp_in_ms_unit
 
 
 class CodeMessage:
@@ -53,7 +53,7 @@ class Response:
 
     def to_dict(self) -> Dict:
         if self.timestamp is None:
-            self.timestamp = convert_date_to_timestamp(datetime.now())
+            self.timestamp = datetime.now().timestamp()
         return {
             "payload": self.payload,
             "errors": [err.to_dict for err in self.errors],

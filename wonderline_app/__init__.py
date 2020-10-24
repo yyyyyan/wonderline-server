@@ -11,7 +11,7 @@ from flask import Flask
 from flask_login import LoginManager
 
 from wonderline_app.api import rest_api
-from wonderline_app.api.namespaces import users_namespace, trips_namespace, common_namespace
+from wonderline_app.api.namespaces import users_namespace, trips_namespace, common_namespace, search_namespace
 from wonderline_app.core.image_service import upload_encoded_image, upload_default_avatar_if_possible
 from wonderline_app.db.minio.base import create_minio_bucket
 from wonderline_app.db.postgres.models import User
@@ -23,6 +23,7 @@ LOGGER = logging.getLogger(__name__)
 def _create_app():
     def __init_rest_api(app):
         rest_api.add_namespace(common_namespace)
+        rest_api.add_namespace(search_namespace)
         rest_api.add_namespace(users_namespace)
         rest_api.add_namespace(trips_namespace)
         rest_api.init_app(app)
