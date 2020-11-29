@@ -6,17 +6,18 @@ import logging
 from typing import Dict, List, Optional, Callable, Union, Tuple
 
 from flask_login import login_user, current_user, logout_user
-from wonderline_app.api.common.enums import AccessLevel, SortType, SearchSortType, TripStatus
+from wonderline_app.api.common.enums import AccessLevel, SortType, SearchSortType
 from wonderline_app.core.api_responses.api_errors import APIError, APIError404, APIError500, APIError401, APIError409
 from wonderline_app.core.api_responses.api_feedbacks import APIFeedback201
 from wonderline_app.core.image_service import ImageSize, upload_encoded_image, DEFAULT_AVATAR_URL
 from wonderline_app.core.api_responses.response import Response, Error, Feedback
 from wonderline_app.db.cassandra.exceptions import TripNotFound, CommentNotFound, PhotoNotFound
 from wonderline_app.db.cassandra.models import AlbumsByUser, TripsByUser, HighlightsByUser, MentionsByUser, Trip, \
-    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip
+    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.models import User
+from wonderline_app.utils import get_current_timestamp, construct_location, infer_country_from_location, get_uuid
 
 DEFAULT_AVATAR = "https://img2.pngio.com/united-states-avatar-organization-information-png-512x512px-user-avatar-png-820_512.jpg"
 
@@ -30,6 +31,7 @@ def handle_request(func: Callable, *args, **kwargs) -> Union[Dict, Tuple[Dict, i
     LOGGER.info(f"Handling function {func.__name__}")
     response = Response()
     for arg_key, arg_value in kwargs.items():
+        # TODO: handle the case where the value is too long to print
         LOGGER.info(f"Receive arguments: key: {arg_key}, type: {type(arg_key)}, value: {arg_value}")
     try:
         func_response = func(*args, **kwargs)
@@ -131,7 +133,8 @@ def get_user_complete_attributes(user_id: str, followers_sort_type: str = SortTy
 
 
 @user_token_required
-def get_user_followers(user_id: str, sort_type: str = "creteTime", nb: int = 50, start_index: int = 0) -> List:
+def get_user_followers(user_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 50,
+                       start_index: int = 0) -> List:
     """Get user's followers with reduced attributes"""
     user = _get_user(user_id=user_id)
     LOGGER.info(f"Getting followers for {user_id}")
@@ -143,7 +146,7 @@ def get_user_followers(user_id: str, sort_type: str = "creteTime", nb: int = 50,
 
 
 @user_token_required
-def get_albums_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, start_index: int = 0,
+def get_albums_by_user(user_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 3, start_index: int = 0,
                        access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the albums for the user."""
     user = _get_user(user_id=user_id)
@@ -158,7 +161,7 @@ def get_albums_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, 
 
 
 @user_token_required
-def get_trips_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, start_index: int = 0,
+def get_trips_by_user(user_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 3, start_index: int = 0,
                       access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the trips for the user."""
     user = _get_user(user_id=user_id)
@@ -173,7 +176,7 @@ def get_trips_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, s
 
 
 @user_token_required
-def get_highlights_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 3, start_index: int = 0,
+def get_highlights_by_user(user_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 3, start_index: int = 0,
                            access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the highlights for the user."""
     user = _get_user(user_id=user_id)
@@ -188,7 +191,7 @@ def get_highlights_by_user(user_id: str, sort_type: str = "creteTime", nb: int =
 
 
 @user_token_required
-def get_mentions_by_user(user_id: str, sort_type: str = "creteTime", nb: int = 12, start_index: int = 0,
+def get_mentions_by_user(user_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 12, start_index: int = 0,
                          access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the mentions for the user."""
     user = _get_user(user_id=user_id)
@@ -214,7 +217,8 @@ def get_complete_trip(trip_id: str, users_sort_type: str = SortType.CREATE_TIME.
 
 
 @user_token_required
-def get_users_by_trip(trip_id: str, sort_type: str = "creteTime", nb: int = 12, start_index: int = 0) -> List[Dict]:
+def get_users_by_trip(trip_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 12, start_index: int = 0) -> \
+        List[Dict]:
     """Get all the users for a trip."""
     trip = get_trip(trip_id=trip_id)
     if trip:
@@ -226,7 +230,7 @@ def get_users_by_trip(trip_id: str, sort_type: str = "creteTime", nb: int = 12, 
 
 
 @user_token_required
-def get_photos_by_trip(trip_id: str, sort_type: str = "creteTime", nb: int = 12, start_index: int = 0,
+def get_photos_by_trip(trip_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 12, start_index: int = 0,
                        access_level: str = AccessLevel.EVERYONE.value) -> List[Dict]:
     """Get all the photos for the trip."""
     trip = get_trip(trip_id=trip_id)
@@ -275,7 +279,8 @@ def get_comments_by_photo(trip_id: str, photo_id: str, replies_sort_type: str, r
 
 
 @user_token_required
-def get_replies_by_comment(trip_id: str, photo_id: str, comment_id: str, sort_type: str = "creteTime", nb: int = 3,
+def get_replies_by_comment(trip_id: str, photo_id: str, comment_id: str, sort_type: str = SortType.CREATE_TIME.value,
+                           nb: int = 3,
                            start_index: int = 0) -> List[Dict]:
     """Get all the replies for the comment."""
     trip = get_trip(trip_id=trip_id)
@@ -347,7 +352,7 @@ def sign_out():
 @user_token_required
 def create_new_trip(owner_id: str, trip_name: str, user_ids: List[str], users_sort_type: str):
     new_trip = create_and_return_new_trip(owner_id, trip_name, user_ids)
-    if new_trip:
+    if new_trip is not None:
         return new_trip.get_complete_attributes(users_sort_type=users_sort_type, user_nb=-1), APIFeedback201(
             message=f"Trip '{trip_name}' successfully created")
     else:
@@ -383,12 +388,7 @@ def update_trip(trip_id: str, name: str, description: str, user_ids: List[str]):
                 create_time=trip.create_time,
                 trip_id=trip_id,
                 owner_id=trip.owner_id,
-                access_level=AccessLevel.EVERYONE.value,
-                status=TripStatus.EDITING.value,
                 **attributes_to_update,
-                begin_time=None,
-                end_time=None,
-                photo_nb=0
             )
         for user_id in user_ids_to_update:
             TripsByUser.get(user_id=user_id, trip_id=trip_id, create_time=trip.create_time).update(
@@ -410,3 +410,60 @@ def search_users(query: str, users_sort_type: str = SearchSortType.BEST_MATCH.va
         nb=nb,
         sort_type=users_sort_type
     )
+
+
+@user_token_required
+def upload_trip_photos(trip_id: str, original_photos: List[Dict]) -> Tuple[List[Dict], APIFeedback201]:
+    # 1. get trip obj from Cassandra DB
+    # 2. for each photo:
+    #   2.1. generate url
+    #   2.2. create photo obj in Cassandra DB
+    #   2.3. add it to the table photos_by_trip
+    # 3. use the first photo as the cover photo for the trip if it's not set yet
+    LOGGER.info(f"Uploading photo for trip {trip_id}")
+    trip = get_trip(trip_id=trip_id)
+    for original_photo in original_photos:
+        size2url = upload_encoded_image(
+            image=original_photo['data'],
+            sizes=[ImageSize.ORIGINAL, ImageSize.MEDIUM, ImageSize.SMALL])
+        location = construct_location(longitude=original_photo['longitude'],
+                                      longitude_ref=original_photo['longitudeRef'],
+                                      latitude=original_photo['latitude'],
+                                      latitude_ref=original_photo['latitudeRef'])
+        country = infer_country_from_location(
+            longitude=float(original_photo['longitude']),
+            latitude=float(original_photo['latitude']))
+        reduced_photo = ReducedPhoto(
+            photo_id=get_uuid(),
+            trip_id=trip_id,
+            owner=current_user.id,
+            location=location,
+            country=country,
+            create_time=get_current_timestamp(),
+            upload_time=original_photo['time'],
+            width=original_photo['width'],
+            height=original_photo['height'],
+            low_quality_src=size2url[ImageSize.SMALL.name],
+            src=size2url[ImageSize.MEDIUM.name],
+            access_level=original_photo['accessLevel']
+        )
+        Photo.create_from_reduced_photo(
+            reduced_photo=reduced_photo,
+            high_quality_src=size2url[ImageSize.ORIGINAL.name],
+            mentioned_users=original_photo.get("mentionedUserIds", set()),
+        )
+        PhotosByTrip.create_from_reduced_photo(reduced_photo=reduced_photo)
+        if trip.cover_photo is None:
+            try:
+                trip.update(cover_photo=reduced_photo)
+            except Exception as e:
+                LOGGER.exception(e)
+                raise APIError500(f"Failed to update the cover photo for the trip, trip_id={trip_id}")
+            LOGGER.info(f"Update the cover photo for the trip {trip_id} with the photo {reduced_photo.photo_id}")
+
+    return PhotosByTrip.get_filtered_photos(
+        trip_id=trip_id,
+        sort_by=SortType.CREATE_TIME.value,
+        nb=-1,  # no limit on the number
+        start_index=0,
+        access_level=AccessLevel.EVERYONE.value), APIFeedback201(message=f"Photos are added successfully")

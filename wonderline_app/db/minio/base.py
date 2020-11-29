@@ -91,3 +91,8 @@ def object_exists_in_minio(bucket_name: str, object_name: str):
     except NoSuchKey:
         return False
     return minio_object is not None
+
+
+def remove_object_from_minio(bucket_name: str, object_name: str):
+    minio_client = get_minio_client()
+    minio_client.remove_object(bucket_name=bucket_name, object_name=object_name)

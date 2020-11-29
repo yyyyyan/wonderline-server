@@ -1,5 +1,8 @@
+import base64
 import datetime
+import uuid
 
+import reverse_geocoder
 import yaml
 # Q:why importing logging.config:
 # A: https://stackoverflow.com/questions/2234982/why-both-import-logging-and-import-logging-config-are-needed
@@ -46,3 +49,31 @@ def get_utc_with_delta(delta: int):
     current_time_utc = datetime.datetime.now()
     current_time_utc_plus_delta = current_time_utc + datetime.timedelta(hours=delta)
     return current_time_utc_plus_delta
+
+
+def get_current_timestamp():
+    return get_utc_with_delta(delta=0).timestamp()
+
+
+def construct_location(longitude, longitude_ref, latitude, latitude_ref):
+    return longitude + ' ' + longitude_ref + ', ' + latitude + ' ' + latitude_ref
+
+
+def infer_country_from_location(longitude: float, latitude: float):
+    results = reverse_geocoder.search((latitude, longitude))  # default mode = 2
+    if results is not None and len(results):
+        res = results[0]
+        location = res['name']
+        country = res['cc']
+        return location + ', ' + country
+    return ''
+
+
+def get_uuid() -> str:
+    return str(uuid.uuid1())
+
+
+def encode_image(file_path):
+    with open(file_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read())
+    return encoded_string.decode("utf-8")  # use decode to convert bytes to string

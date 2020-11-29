@@ -1,9 +1,11 @@
+import os
 import unittest
 
 from wonderline_app import APP
-from wonderline_app.db.cassandra.models import delete_trip_id, create_and_return_new_trip
+from wonderline_app.db.cassandra.models import delete_all_about_given_trip, create_and_return_new_trip
 from wonderline_app.db.postgres.init import db_session
 from wonderline_app.db.postgres.models import User
+from wonderline_app.utils import encode_image
 
 HOST = "http://localhost:80"
 
@@ -59,28 +61,32 @@ class ApiTEST(unittest.TestCase):
                 return False
 
     def _assert_response(self, expected_code, expected_res, response, excludes=None):
+        def _pop_exclude_key(exclude_keys, item):
+            if isinstance(item, list):
+                for ele in item:
+                    _pop_exclude_key(exclude_keys, ele)
+            elif isinstance(item, dict):
+                items_keys = list(item.keys())
+                for k in items_keys:
+                    if k in exclude_keys:
+                        assert item[k] is not None
+                        item.pop(k)
+                    elif isinstance(item[k], dict):
+                        _pop_exclude_key(exclude_keys, item[k])
+                    elif isinstance(item[k], list):
+                        for ele in item[k]:
+                            _pop_exclude_key(exclude_keys, ele)
+            else:
+                return
+
         response_json = response.json
         if excludes is None:
             excludes = ['timestamp']
+        excludes = set(excludes)
+        _pop_exclude_key(exclude_keys=excludes, item=response_json)
+        _pop_exclude_key(exclude_keys=excludes, item=expected_res)
+
         try:
-            for exclude in excludes:
-                if '/' in exclude:
-                    hierarchy = exclude.split('/')
-                    sub_exp, sub_res = {}, {}
-                    cur_res_dict = response_json
-                    cur_exp_dict = expected_res
-                    for h in hierarchy[:-1]:
-                        next_res_dict = cur_res_dict[h]
-                        next_exp_dict = cur_exp_dict[h]
-                        cur_res_dict = next_res_dict
-                        cur_exp_dict = next_exp_dict
-                    self.assertIsNotNone(cur_res_dict[hierarchy[-1]])
-                    cur_res_dict.pop(hierarchy[-1])
-                    cur_exp_dict.pop(hierarchy[-1])
-                else:
-                    self.assertIsNotNone(response_json[exclude])
-                    response_json.pop(exclude)
-                    expected_res.pop(exclude)
             self.assertEqual(expected_code, response.status_code)
             self.assertEqual(expected_res, response_json)
         except AssertionError as e:
@@ -1189,20 +1195,21 @@ class ApiTEST(unittest.TestCase):
             "timestamp": 1601155452818
         }
         # delete the test trip from cassandra
-        delete_trip_id(trip_id=response.json['payload']['reducedTrip']['id'])
+        delete_all_about_given_trip(trip_id=response.json['payload']['reducedTrip']['id'])
         self._assert_response(
             expected_code=201,
             expected_res=expected_res,
             response=response,
             excludes=[
                 'timestamp',
-                'payload/reducedTrip/id',
-                'payload/reducedTrip/createTime'
+                'id',
+                'createTime'
             ]
         )
 
     def test_update_trip(self):
-        new_trip = create_and_return_new_trip(owner_id='user_001', trip_name='test trip', user_ids=['user_001', 'user_002'])
+        new_trip = create_and_return_new_trip(owner_id='user_001', trip_name='test trip',
+                                              user_ids=['user_001', 'user_002'])
         response = self._post_req_from_jon(
             endpoint=f'/trips/{new_trip.trip_id}',
             method='patch',
@@ -1261,12 +1268,12 @@ class ApiTEST(unittest.TestCase):
             response=response,
             excludes=[
                 'timestamp',
-                'payload/reducedTrip/id',
-                'payload/reducedTrip/createTime'
+                'id',
+                'createTime'
             ]
         )
         # delete the test trip from cassandra
-        delete_trip_id(trip_id=new_trip.trip_id)
+        delete_all_about_given_trip(trip_id=new_trip.trip_id)
 
     def test_search_users(self):
         response = self._get_req_from_jon(
@@ -1298,3 +1305,76 @@ class ApiTEST(unittest.TestCase):
             expected_res=expected_res,
             response=response
         )
+
+    def test_post_trip_photos(self):
+        new_trip = create_and_return_new_trip(owner_id='user_001', trip_name='test', user_ids=['user_001'])
+        trip_id = new_trip.trip_id
+        response = self._post_req_from_jon(
+            endpoint=f'/trips/{trip_id}/photos',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "originalPhotos": [
+                    {
+                        "data": encode_image(os.environ['TEST_PHOTO_PATH']),
+                        "latitude": "64.752895",
+                        "latitudeRef": "N",
+                        "longitude": "14.53861166666667",
+                        "longitudeRef": "W",
+                        "time": 1605306885,
+                        "width": 400,
+                        "height": 600,
+                        "mentionedUserIds": [
+                            "user_001"
+                        ],
+                        "accessLevel": "everyone"
+                    }
+                ]
+            }
+        )
+        expected_res = {
+            "payload": [
+                {
+                    "id": "ea8c6af8-30f8-11eb-8474-0242ac160005",
+                    "accessLevel": "everyone",
+                    "tripId": "0866515c-30f8-11eb-8474-0242ac160005",
+                    "status": "editing",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "location": "14.53861166666667 W, 64.752895 N",
+                    "country": "Royrvik, NO",
+                    "createTime": 1606520321002,
+                    "uploadTime": 1605306885000,
+                    "width": 400,
+                    "height": 600,
+                    "lqSrc": "http://localhost/photos/ea8a259a-30f8-11eb-8474-0242ac160005.png",
+                    "src": "http://localhost/photos/ea8651ea-30f8-11eb-8474-0242ac160005.png",
+                    "likedNb": 0
+                }
+            ],
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1601155452818
+        }
+        photo_id = response.json['payload'][0]['id']
+        self._assert_response(
+            expected_code=201,
+            expected_res=expected_res,
+            response=response,
+            excludes=[
+                'timestamp',
+                'id',
+                'createTime',
+                'lqSrc',
+                'src',
+                'tripId',
+                'feedbacks'
+            ]
+        )
+        # delete the test trip and photo from cassandra
+        delete_all_about_given_trip(trip_id=new_trip.trip_id, photo_ids=[photo_id])

@@ -9,7 +9,8 @@ from typing import Dict, Union, List
 from werkzeug.utils import secure_filename
 from PIL import Image
 
-from wonderline_app.db.minio.base import put_object_in_minio_and_return_url, object_exists_in_minio
+from wonderline_app.db.minio.base import put_object_in_minio_and_return_url, object_exists_in_minio, \
+    remove_object_from_minio
 
 LOGGER = logging.getLogger(__name__)
 DEFAULT_AVATAR_URL = "http://localhost/photos/default_avatar.png"
@@ -169,3 +170,8 @@ def upload_default_avatar_if_possible():
             file_path=default_avatar_path,
             object_name=object_name
         )
+
+
+def remove_image_by_url(url: str):
+    object_name = url.split(os.environ['MINIO_PHOTOS_BUCKET_NAME'])[1]
+    remove_object_from_minio(bucket_name=os.environ['MINIO_PHOTOS_BUCKET_NAME'], object_name=object_name)

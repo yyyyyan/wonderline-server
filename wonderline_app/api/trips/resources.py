@@ -7,13 +7,14 @@ from flask_restplus import Resource
 from wonderline_app.api.common.enums import SortType
 from wonderline_app.api.common.request_parsers import common_parser
 from wonderline_app.api.namespaces import trips_namespace
-from wonderline_app.api.trips.request_models.models import trip_creation_model, trip_update_model
+from wonderline_app.api.trips.request_models.models import trip_creation_model, trip_update_model, photo_upload_model
 from wonderline_app.api.trips.request_parsers import trip_parser, trip_users_parser, trip_photos_parser, \
     trip_photo_parser, photo_comments_parser, comment_replies_parser
 from wonderline_app.api.trips.responses import trip_res, trip_users_res, trip_photos_res, trip_photo_res, \
     photo_comments_res, comment_replies_res
 from wonderline_app.core.api_logics import handle_request, get_complete_trip, get_users_by_trip, \
-    get_photos_by_trip, get_photo_details, get_comments_by_photo, get_replies_by_comment, create_new_trip, update_trip
+    get_photos_by_trip, get_photo_details, get_comments_by_photo, get_replies_by_comment, create_new_trip, update_trip, \
+    upload_trip_photos
 
 
 @trips_namespace.route("/<string:tripId>")
@@ -90,6 +91,20 @@ class TripPhotos(Resource):
             access_level=access_level
         )
 
+    @trips_namespace.expect(common_parser, photo_upload_model, validate=True)
+    @trips_namespace.marshal_with(trip_photos_res)
+    def post(self, tripId):
+        args = common_parser.parse_args()
+        user_token = args.get('userToken')
+        original_photos = request.json['originalPhotos']
+
+        return handle_request(
+            func=upload_trip_photos,
+            user_token=user_token,
+            trip_id=tripId,
+            original_photos=original_photos
+        )
+
 
 @trips_namespace.route("/<string:tripId>/photos/<string:photoId>")
 class TripPhoto(Resource):
@@ -160,7 +175,7 @@ class NewTrip(Resource):
     @trips_namespace.expect(common_parser, trip_creation_model, validate=True)
     @trips_namespace.marshal_with(trip_res)
     def post(self):
-        args = comment_replies_parser.parse_args()
+        args = common_parser.parse_args()
         user_token = args.get("userToken")
         owner_id = request.json['ownerId']
         trip_name = request.json['tripName']

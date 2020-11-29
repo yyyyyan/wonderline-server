@@ -4,8 +4,9 @@ Cassandra ORM.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
+from datetime import datetime
 from typing import List, Dict, Type, Optional
-import uuid
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.columns import UserDefinedType
 from cassandra.cqlengine.models import Model
@@ -13,10 +14,11 @@ from cassandra.cqlengine.query import DoesNotExist, LWTException
 from cassandra.cqlengine.usertype import UserType
 
 from wonderline_app.api.common.enums import SortType, AccessLevel, TripStatus
+from wonderline_app.core.image_service import remove_image_by_url
 from wonderline_app.db.cassandra.exceptions import PhotoNotFound, TripNotFound, CommentNotFound
 from wonderline_app.db.postgres.exceptions import UserNotFound
 from wonderline_app.db.postgres.models import User
-from wonderline_app.utils import convert_date_to_timestamp_in_ms_unit, get_utc_with_delta
+from wonderline_app.utils import convert_date_to_timestamp_in_ms_unit, get_current_timestamp, get_uuid
 
 LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +31,62 @@ SORTING_MAPPING = {
 def get_filtered_models(cls: Type[Model], primary_key: str, id_value: str, sort_by: str = 'create_time', nb: int = 3,
                         access_level=None, start_index=0) -> List[Model]:
     sort_by = SORTING_MAPPING[sort_by]
-    models = cls.objects(getattr(cls, primary_key) == id_value).order_by(sort_by).limit(start_index + nb)
+    models = cls.objects(getattr(cls, primary_key) == id_value).order_by(sort_by)
+    if nb == -1:
+        models = models.limit(None)
+    elif nb < 0:
+        raise ValueError(f"nb expected positive or -1, got {nb}")
+    else:
+        models = models.limit(start_index + nb)
+
     if access_level is not None:
         models = [model for model in models if model.access_level == access_level]
-    return models[start_index:start_index + nb]
+    if nb == -1:
+        return models[start_index:]
+    else:
+        return models[start_index:start_index + nb]
+
+
+class PhotoUtils:
+    @classmethod
+    def create_from_reduced_photo(cls, reduced_photo: ReducedPhoto, **kwargs):
+        try:
+            return cls.if_not_exists().create(
+                **{k: getattr(reduced_photo, k) for k in reduced_photo.keys()},
+                **kwargs)
+        except LWTException as exp:
+            LOGGER.warning(f"Failed to create new record from reduced photo, photo_id={reduced_photo.photo_id}")
+            LOGGER.warning(f"{exp.existing}")
+            raise Exception(f"Failed to create a new record for the class {cls.__name__}")
+
+
+class TripUtils:
+    @classmethod
+    def create_from_reduced_trip(cls, reduced_trip: ReducedTrip, **kwargs):
+        try:
+            return cls.if_not_exists().create(
+                **{k: getattr(reduced_trip, k) for k in vars(reduced_trip).keys()},
+                **kwargs)
+        except LWTException as exp:
+            LOGGER.warning(f"Failed to create new record from reduced trip, trip_id={reduced_trip.trip_id}")
+            LOGGER.warning(f"{exp.existing}")
+            raise exp
+
+
+@dataclass
+class ReducedTrip:
+    trip_id: str
+    owner_id: str
+    create_time: datetime
+    name: str
+    users: set = set
+    access_level: str = AccessLevel.EVERYONE.value
+    status: str = TripStatus.EDITING.value
+    description: str = ""
+    begin_time: datetime = None
+    end_time: datetime = None
+    photo_nb: int = 0
+    cover_photo: ReducedPhoto = None
 
 
 class Reply(UserType):
@@ -42,7 +96,7 @@ class Reply(UserType):
     user = columns.Text()
     create_time = columns.DateTime()
     content = columns.Text()
-    liked_nb = columns.SmallInt()
+    liked_nb = columns.SmallInt(default=0)
 
     def to_dict(self) -> Dict:
         return {
@@ -63,8 +117,8 @@ class ReducedPhoto(UserType):
     photo_id = columns.Text()
     trip_id = columns.Text()
     owner = columns.Text()
-    access_level = columns.Text()
-    status = columns.Text()
+    access_level = columns.Text(default=AccessLevel.EVERYONE.value)
+    status = columns.Text(default=TripStatus.EDITING.value)
     location = columns.Text()
     country = columns.Text()
     create_time = columns.DateTime()
@@ -73,7 +127,7 @@ class ReducedPhoto(UserType):
     height = columns.SmallInt()
     low_quality_src = columns.Text()
     src = columns.Text()
-    liked_nb = columns.SmallInt()
+    liked_nb = columns.SmallInt(default=0)
 
     def to_dict(self) -> Dict:
         return {
@@ -121,8 +175,8 @@ class Comment(Model):
     create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
     user = columns.Text(primary_key=True, clustering_order="DESC")
     content = columns.Text()
-    liked_nb = columns.SmallInt()
-    reply_nb = columns.SmallInt()
+    liked_nb = columns.SmallInt(default=0)
+    reply_nb = columns.SmallInt(default=0)
     replies = columns.Set(UserDefinedType(Reply))
 
     def to_dict(self) -> Dict:
@@ -163,8 +217,8 @@ class CommentsByPhoto(Model):
     comment_id = columns.Text(primary_key=True, clustering_order="DESC")
     user = columns.Text()
     content = columns.Text()
-    liked_nb = columns.SmallInt()
-    reply_nb = columns.SmallInt()
+    liked_nb = columns.SmallInt(default=0)
+    reply_nb = columns.SmallInt(default=0)
     replies = columns.Set(UserDefinedType(Reply))
 
     def to_dict(self) -> Dict:
@@ -215,14 +269,14 @@ class CommentsByPhoto(Model):
         return [comment.to_dict() for comment in comments]
 
 
-class Photo(Model):
+class Photo(Model, PhotoUtils):
     __table_name__ = "photo"
 
     photo_id = columns.Text(primary_key=True)
     trip_id = columns.Text()
     owner = columns.Text()
-    access_level = columns.Text()
-    status = columns.Text()
+    access_level = columns.Text(default=AccessLevel.EVERYONE.value)
+    status = columns.Text(default=TripStatus.EDITING.value)
     location = columns.Text()
     country = columns.Text()
     create_time = columns.DateTime()
@@ -231,11 +285,11 @@ class Photo(Model):
     height = columns.SmallInt()
     low_quality_src = columns.Text()
     src = columns.Text()
-    liked_nb = columns.SmallInt()
+    liked_nb = columns.SmallInt(default=0)
     high_quality_src = columns.Text()
     liked_users = columns.Set(columns.Text())
     mentioned_users = columns.Set(columns.Text())
-    comment_nb = columns.SmallInt()
+    comment_nb = columns.SmallInt(default=0)
     comments = columns.Set(columns.Text())
 
     def to_dict(self) -> Dict:
@@ -312,24 +366,24 @@ class Photo(Model):
         return photo.to_dict()
 
 
-class Trip(Model):
+class Trip(Model, TripUtils):
     __table_name__ = "trip"
 
     trip_id = columns.Text(primary_key=True)
     owner_id = columns.Text()
-    access_level = columns.Text()
-    status = columns.Text()
+    access_level = columns.Text(default=AccessLevel.EVERYONE.value)
+    status = columns.Text(default=TripStatus.EDITING.value)
     name = columns.Text()
-    description = columns.Text()
+    description = columns.Text(default="")
     users = columns.Set(columns.Text())
     create_time = columns.DateTime()
-    begin_time = columns.DateTime()
-    end_time = columns.DateTime()
-    photo_nb = columns.SmallInt()
+    begin_time = columns.DateTime(default=None)
+    end_time = columns.DateTime(default=None)
+    photo_nb = columns.SmallInt(default=0)
     cover_photo = UserDefinedType(ReducedPhoto)
-    liked_nb = columns.SmallInt()
-    shared_nb = columns.SmallInt()
-    saved_nb = columns.SmallInt()
+    liked_nb = columns.SmallInt(default=0)
+    shared_nb = columns.SmallInt(default=0)
+    saved_nb = columns.SmallInt(default=0)
 
     def to_dict(self) -> Dict:
         return {
@@ -374,21 +428,21 @@ class Trip(Model):
         return [u.to_reduced_dict() for u in users]
 
 
-class TripsByUser(Model):
+class TripsByUser(Model, TripUtils):
     __table_name__ = "trips_by_user"
 
     user_id = columns.Text(primary_key=True)
     create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
     trip_id = columns.Text(primary_key=True, clustering_order="DESC")
     owner_id = columns.Text()
-    access_level = columns.Text()
-    status = columns.Text()
+    access_level = columns.Text(default=AccessLevel.EVERYONE.value)
+    status = columns.Text(default=TripStatus.EDITING.value)
     name = columns.Text()
-    description = columns.Text()
+    description = columns.Text(default="")
     users = columns.Set(columns.Text())
     begin_time = columns.DateTime()
     end_time = columns.DateTime()
-    photo_nb = columns.SmallInt()
+    photo_nb = columns.SmallInt(default=0)
     cover_photo = columns.Text()
 
     def to_dict(self) -> Dict:
@@ -428,15 +482,15 @@ class TripsByUser(Model):
         return [trip.to_dict() for trip in trips]
 
 
-class PhotosByTrip(Model):
+class PhotosByTrip(Model, PhotoUtils):
     __table_name__ = "photos_by_trip"
 
     trip_id = columns.Text(primary_key=True)
     create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
     photo_id = columns.Text(primary_key=True, clustering_order="DESC")
     owner = columns.Text()
-    access_level = columns.Text()
-    status = columns.Text()
+    access_level = columns.Text(default=AccessLevel.EVERYONE.value)
+    status = columns.Text(default=TripStatus.EDITING.value)
     location = columns.Text()
     country = columns.Text()
     upload_time = columns.DateTime()
@@ -444,7 +498,7 @@ class PhotosByTrip(Model):
     height = columns.SmallInt()
     low_quality_src = columns.Text()
     src = columns.Text()
-    liked_nb = columns.SmallInt()
+    liked_nb = columns.SmallInt(default=0)
 
     def to_dict(self) -> Dict:
         return {
@@ -484,7 +538,7 @@ class AlbumsByUser(Model):
     user_id = columns.Text(primary_key=True)
     create_time = columns.DateTime(primary_key=True, clustering_order='DESC')
     album_id = columns.Text(primary_key=True, clustering_order='DESC')
-    access_level = columns.Text()
+    access_level = columns.Text(default=AccessLevel.EVERYONE.value)
     cover_photos = columns.Set(UserDefinedType(RearrangedPhoto))
 
     @classmethod
@@ -520,7 +574,7 @@ class MentionsByUser(Model):
     user_id = columns.Text(primary_key=True)
     create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
     mention_id = columns.Text(primary_key=True, clustering_order="DESC")
-    access_level = columns.Text()
+    access_level = columns.Text(default=AccessLevel.EVERYONE.value)
     photo = UserDefinedType(ReducedPhoto)
 
     @classmethod
@@ -551,9 +605,9 @@ class HighlightsByUser(Model):
     user_id = columns.Text(primary_key=True)
     create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
     highlight_id = columns.Text(primary_key=True, clustering_order="DESC")
-    access_level = columns.Text()
+    access_level = columns.Text(default=AccessLevel.EVERYONE.value)
     cover_photo = columns.Text()
-    description = columns.Text()
+    description = columns.Text(default="")
 
     @classmethod
     def get_highlights(cls, user_id: str, sort_by: str = 'create_time', nb: int = 3, access_level=None,
@@ -586,49 +640,20 @@ class HighlightsByUser(Model):
 def create_and_return_new_trip(owner_id: str, trip_name: str, user_ids: List[str]) -> Optional[Trip]:
     if user_ids is None or not len(user_ids):
         user_ids = [owner_id]
-
-    create_time = get_utc_with_delta(delta=2).timestamp()  # get UTC+2 (french time)
-    trip_id = str(uuid.uuid1())
-    try:
-        new_trip = Trip.if_not_exists().create(
-            trip_id=trip_id,
-            owner_id=owner_id,
-            access_level=AccessLevel.EVERYONE.value,
-            status=TripStatus.EDITING.value,
-            name=trip_name,
-            description="",
-            users=user_ids,
-            create_time=create_time,
-            begin_time=None,
-            end_time=None,
-            photo_nb=0,
-            liked_nb=0,
-            shared_nb=0,
-            saved_nb=0
-        )
-    except LWTException as exp:
-        LOGGER.warning(f"Failed to create a new trip with trip_id:{trip_id})")
-        LOGGER.warning(f"{exp.existing}")
-        return None
+    reduced_trip = ReducedTrip(
+        trip_id=get_uuid(),
+        owner_id=owner_id,
+        create_time=get_current_timestamp(),
+        name=trip_name,
+        users=set(user_ids)
+    )
+    new_trip = Trip.create_from_reduced_trip(reduced_trip=reduced_trip)
     for user_id in user_ids:
-        TripsByUser.create(
-            user_id=user_id,
-            create_time=create_time,
-            trip_id=trip_id,
-            owner_id=owner_id,
-            access_level=AccessLevel.EVERYONE.value,
-            status=TripStatus.EDITING.value,
-            name=trip_name,
-            description="",
-            users=user_ids,
-            begin_time=None,
-            end_time=None,
-            photo_nb=0
-        )
+        TripsByUser.create_from_reduced_trip(reduced_trip=reduced_trip, user_id=user_id)
     return new_trip
 
 
-def delete_trip_id(trip_id: str):
+def delete_all_about_given_trip(trip_id: str, photo_ids=None):
     # only used for integration test
     trip = Trip.get_trip_by_trip_id(trip_id=trip_id)
     for user_id in trip.users:
@@ -638,4 +663,16 @@ def delete_trip_id(trip_id: str):
             create_time=trip.create_time
         )
         trips_by_user_record.delete()
+    if photo_ids is not None:
+        for photo_id in photo_ids:
+            photo = Photo.get(photo_id=photo_id)
+            PhotosByTrip.get(
+                trip_id=trip_id,
+                photo_id=photo_id,
+                create_time=photo.create_time
+            ).delete()
+            photo.delete()
+            remove_image_by_url(photo.high_quality_src)
+            remove_image_by_url(photo.src)
+            remove_image_by_url(photo.low_quality_src)
     trip.delete()
