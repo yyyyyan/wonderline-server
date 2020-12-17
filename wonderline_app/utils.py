@@ -55,11 +55,15 @@ def get_current_timestamp():
     return get_utc_with_delta(delta=0).timestamp()
 
 
-def construct_location(longitude, longitude_ref, latitude, latitude_ref):
+def construct_location(longitude, latitude, latitude_ref='N', longitude_ref='W'):
+    if longitude is None or latitude is None:
+        return None
     return longitude + ' ' + longitude_ref + ', ' + latitude + ' ' + latitude_ref
 
 
 def infer_country_from_location(longitude: float, latitude: float):
+    if longitude is None or latitude is None:
+        return ''
     results = reverse_geocoder.search((latitude, longitude))  # default mode = 2
     if results is not None and len(results):
         res = results[0]

@@ -50,10 +50,11 @@ def test_upload_image():
         raise e
     finally:
         try:
-            minio_client.remove_bucket(bucket_name='test')
             minio_client.remove_object(bucket_name='test', object_name=object_name)
-        except Exception:
-            pass
+            minio_client.remove_bucket(bucket_name='test')
+        except Exception as e:
+            print(e)
+            assert False
 
 
 def test_image_storage_filename(mock_image_storage):

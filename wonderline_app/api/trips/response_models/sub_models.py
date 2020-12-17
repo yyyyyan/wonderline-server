@@ -19,7 +19,7 @@ comment_model = trips_namespace.inherit("Comment", reply_model, {
 })
 
 reduced_photo_model = trips_namespace.model("ReducedPhoto", {
-    "id": fields.String(example="user_001"),
+    "id": fields.String(example="photo_01_1"),
     "accessLevel": fields.String(example="everyone"),
     "tripId": fields.String(example="trip_01"),
     "status": fields.String(example="confirmed"),

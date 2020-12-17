@@ -13,7 +13,7 @@ from wonderline_app.core.image_service import ImageSize, upload_encoded_image, D
 from wonderline_app.core.api_responses.response import Response, Error, Feedback
 from wonderline_app.db.cassandra.exceptions import TripNotFound, CommentNotFound, PhotoNotFound
 from wonderline_app.db.cassandra.models import AlbumsByUser, TripsByUser, HighlightsByUser, MentionsByUser, Trip, \
-    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto
+    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto, delete_photos
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.models import User
@@ -212,7 +212,7 @@ def get_complete_trip(trip_id: str, users_sort_type: str = SortType.CREATE_TIME.
     LOGGER.info(f"Getting complete trip information for {trip_id}")
     return trip.get_complete_attributes(
         users_sort_type=users_sort_type,
-        user_nb=-1,
+        user_nb=None,
     )
 
 
@@ -225,8 +225,8 @@ def get_users_by_trip(trip_id: str, sort_type: str = SortType.CREATE_TIME.value,
         LOGGER.info(f"Getting users for trip {trip_id}")
         return trip.get_users(
             users_sort_type=sort_type,
-            user_nb=nb,
-            start_index=start_index)
+            start_index=start_index,
+            user_nb=nb)
 
 
 @user_token_required
@@ -353,7 +353,7 @@ def sign_out():
 def create_new_trip(owner_id: str, trip_name: str, user_ids: List[str], users_sort_type: str):
     new_trip = create_and_return_new_trip(owner_id, trip_name, user_ids)
     if new_trip is not None:
-        return new_trip.get_complete_attributes(users_sort_type=users_sort_type, user_nb=-1), APIFeedback201(
+        return new_trip.get_complete_attributes(users_sort_type=users_sort_type, user_nb=None), APIFeedback201(
             message=f"Trip '{trip_name}' successfully created")
     else:
         raise APIError500("Failed to create new trip, please check the server log")
@@ -398,7 +398,7 @@ def update_trip(trip_id: str, name: str, description: str, user_ids: List[str]):
             TripsByUser.get(user_id=user_id, trip_id=trip_id, create_time=trip.create_time).delete()
     # update Trip
     trip.update(**attributes_to_update)
-    return trip.get_complete_attributes(users_sort_type=SortType.CREATE_TIME.value, user_nb=-1)
+    return trip.get_complete_attributes(users_sort_type=SortType.CREATE_TIME.value, user_nb=None)
 
 
 @user_token_required
@@ -464,6 +464,57 @@ def upload_trip_photos(trip_id: str, original_photos: List[Dict]) -> Tuple[List[
     return PhotosByTrip.get_filtered_photos(
         trip_id=trip_id,
         sort_by=SortType.CREATE_TIME.value,
-        nb=-1,  # no limit on the number
+        access_level=AccessLevel.EVERYONE.value,
         start_index=0,
-        access_level=AccessLevel.EVERYONE.value), APIFeedback201(message=f"Photos are added successfully")
+        nb=None), APIFeedback201(message=f"Photos are added successfully")
+
+
+def _update_photo(trip_id: str, photo_id: str, access_level: str, mentioned_users: Optional[List[str]]) -> Photo:
+    photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
+    if photo:
+        attributes_to_update = {}
+        if access_level is not None:
+            attributes_to_update['access_level'] = access_level
+        if mentioned_users is not None:
+            attributes_to_update['mentioned_users'] = set(mentioned_users)
+        photo.update(**attributes_to_update)
+        attributes_to_update.pop('mentioned_users', None)
+        if len(attributes_to_update.keys()) > 0:
+            photos_by_trip_record = PhotosByTrip.get(
+                trip_id=trip_id,
+                photo_id=photo_id,
+                create_time=photo.create_time
+            )
+            photos_by_trip_record.update(**attributes_to_update)
+    return photo
+
+
+@user_token_required
+def update_trip_photo(trip_id: str, photo_id: str, access_level: str, mentioned_users: Optional[List[str]]):
+    trip = get_trip(trip_id=trip_id)
+    if trip:
+        try:
+            photo = _update_photo(trip_id, photo_id, access_level, mentioned_users)
+            return photo.get_photo_information(photo_id=photo_id)
+        except PhotoNotFound as e:
+            raise APIError404(message=str(e))
+
+
+@user_token_required
+def update_trip_photos(trip_id: str, photo_ids: List[str], access_level: str):
+    trip = get_trip(trip_id=trip_id)
+    updated_photos = []
+    if trip:
+        for photo_id in photo_ids:
+            try:
+                updated_photos.append(_update_photo(trip_id, photo_id, access_level, mentioned_users=None))
+            except PhotoNotFound as e:
+                raise APIError404(message=str(e))
+    return [photo.to_reduced_photo_dict() for photo in updated_photos]
+
+
+@user_token_required
+def delete_trip_photos(trip_id: str, photo_ids: List[str]):
+    trip = get_trip(trip_id=trip_id)
+    if trip:
+        delete_photos(trip_id=trip_id, photo_ids=photo_ids)

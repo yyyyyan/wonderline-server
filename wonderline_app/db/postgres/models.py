@@ -148,7 +148,7 @@ class User(Base, UserMixin):
             sort_order = desc
         else:
             sort_order = asc
-        if user_nb == -1:  # when user_nb is -1, get all the users starting from start_index
+        if user_nb is None:  # when user_nb is None, get all the users starting from start_index
             end_index = None
         else:
             end_index = start_index + user_nb

@@ -2,6 +2,7 @@ import os
 import unittest
 
 from wonderline_app import APP
+from wonderline_app.core.api_logics import upload_trip_photos
 from wonderline_app.db.cassandra.models import delete_all_about_given_trip, create_and_return_new_trip
 from wonderline_app.db.postgres.init import db_session
 from wonderline_app.db.postgres.models import User
@@ -52,6 +53,8 @@ class ApiTEST(unittest.TestCase):
                 req_method = c.post
             elif method == 'patch':
                 req_method = c.patch
+            elif method == 'delete':
+                req_method = c.delete
             return req_method(url, headers=default_headers, query_string=kwargs['params'],
                               json=kwargs['payload'])
 
@@ -846,7 +849,14 @@ class ApiTEST(unittest.TestCase):
                         "avatarSrc": "avatar.png"
                     }
                 ],
-                "mentionedUsers": [],
+                "mentionedUsers": [
+                    {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    }
+                ],
                 "commentNb": 0,
                 "comments": [
                     {
@@ -933,7 +943,8 @@ class ApiTEST(unittest.TestCase):
             "errors": [],
             "timestamp": 1598177205794
         }
-
+        print(response)
+        print(expected_res)
         self._assert_response(
             expected_code=200,
             expected_res=expected_res,
@@ -1378,3 +1389,350 @@ class ApiTEST(unittest.TestCase):
         )
         # delete the test trip and photo from cassandra
         delete_all_about_given_trip(trip_id=new_trip.trip_id, photo_ids=[photo_id])
+
+    def test_patch_trip_photo_expect_success(self):
+        response = self._post_req_from_jon(
+            endpoint=f'/trips/trip_01/photos/photo_01_1',
+            method='patch',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "accessLevel": "everyone",
+                "mentionedUsers": ["user_001", "user_002"]
+            }
+        )
+        expected_res = {
+            "payload": {
+                "reducedPhoto": {
+                    "id": "photo_01_1",
+                    "accessLevel": "everyone",
+                    "tripId": "trip_01",
+                    "status": "confirmed",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "location": "Westeros",
+                    "country": "Westeros",
+                    "createTime": 1596142628628,
+                    "uploadTime": 1596142628728,
+                    "width": 768,
+                    "height": 1365,
+                    "lqSrc": "photo_1.jpg",
+                    "src": "photo_1.jpg",
+                    "likedNb": 7
+                },
+                "hqSrc": "",
+                "likedUsers": [
+                    {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    {
+                        "id": "user_002",
+                        "accessLevel": "everyone",
+                        "name": "Daenerys Targaryen",
+                        "avatarSrc": "avatar.png"
+                    },
+                    {
+                        "id": "user_003",
+                        "accessLevel": "everyone",
+                        "name": "Red Dragon",
+                        "avatarSrc": "avatar.png"
+                    },
+                    {
+                        "id": "user_004",
+                        "accessLevel": "everyone",
+                        "name": "Blue Dragon",
+                        "avatarSrc": "avatar.png"
+                    },
+                    {
+                        "id": "user_005",
+                        "accessLevel": "everyone",
+                        "name": "Samwell Tarly",
+                        "avatarSrc": "avatar.png"
+                    },
+                    {
+                        "id": "user_006",
+                        "accessLevel": "everyone",
+                        "name": "Cersei Lannister",
+                        "avatarSrc": "avatar.png"
+                    }
+                ],
+                "mentionedUsers": [
+                    {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    {
+                        "id": "user_002",
+                        "accessLevel": "everyone",
+                        "name": "Daenerys Targaryen",
+                        "avatarSrc": "avatar.png"
+                    }
+                ],
+                "commentNb": 0,
+                "comments": [
+                    {
+                        "replyNb": 3,
+                        "replies": [
+                            {
+                                "id": "reply_01",
+                                "user": {
+                                    "id": "user_003",
+                                    "accessLevel": "everyone",
+                                    "name": "Red Dragon",
+                                    "avatarSrc": "avatar.png"
+                                },
+                                "createTime": 1596142629728,
+                                "content": "what?",
+                                "likedNb": 3
+                            },
+                            {
+                                "id": "reply_02",
+                                "user": {
+                                    "id": "user_004",
+                                    "accessLevel": "everyone",
+                                    "name": "Blue Dragon",
+                                    "avatarSrc": "avatar.png"
+                                },
+                                "createTime": 1596142639728,
+                                "content": "good",
+                                "likedNb": 3
+                            },
+                            {
+                                "id": "reply_03",
+                                "user": {
+                                    "id": "user_005",
+                                    "accessLevel": "everyone",
+                                    "name": "Samwell Tarly",
+                                    "avatarSrc": "avatar.png"
+                                },
+                                "createTime": 1596146639728,
+                                "content": "yes",
+                                "likedNb": 1
+                            }
+                        ],
+                        "id": "comment_02",
+                        "user": {
+                            "id": "user_002",
+                            "accessLevel": "everyone",
+                            "name": "Daenerys Targaryen",
+                            "avatarSrc": "avatar.png"
+                        },
+                        "createTime": 1596142639628,
+                        "content": "hello",
+                        "likedNb": 7
+                    },
+                    {
+                        "replyNb": 2,
+                        "replies": [
+                            {
+                                "id": "reply_01",
+                                "user": {
+                                    "id": "user_002",
+                                    "accessLevel": "everyone",
+                                    "name": "Daenerys Targaryen",
+                                    "avatarSrc": "avatar.png"
+                                },
+                                "createTime": 1596142629728,
+                                "content": "what?",
+                                "likedNb": 3
+                            },
+                            {
+                                "id": "reply_02",
+                                "user": {
+                                    "id": "user_006",
+                                    "accessLevel": "everyone",
+                                    "name": "Cersei Lannister",
+                                    "avatarSrc": "avatar.png"
+                                },
+                                "createTime": 1596142639728,
+                                "content": "good",
+                                "likedNb": 4
+                            }
+                        ],
+                        "id": "comment_01",
+                        "user": {
+                            "id": "user_001",
+                            "accessLevel": "everyone",
+                            "name": "Jon Snow",
+                            "avatarSrc": "avatar.png"
+                        },
+                        "createTime": 1596142629628,
+                        "content": "hi",
+                        "likedNb": 7
+                    }
+                ]
+            },
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1608221288
+        }
+        self._assert_response(
+            expected_code=200,
+            expected_res=expected_res,
+            response=response,
+            excludes=[
+                'timestamp',
+            ]
+        )
+        # change back
+        self._post_req_from_jon(
+            endpoint=f'/trips/trip_01/photos/photo_01_1',
+            method='patch',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "accessLevel": "everyone",
+                "mentionedUsers": ["user_001"]
+            }
+        )
+
+    def test_delete_trip_photos(self):
+        new_trip = create_and_return_new_trip(owner_id='user_001', trip_name='test', user_ids=['user_001'])
+        new_trip_id = new_trip.trip_id
+        new_photos_response = self._post_req_from_jon(
+            endpoint=f'/trips/{new_trip_id}/photos',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "originalPhotos": [
+                    {
+                        "data": encode_image(os.environ['TEST_PHOTO_PATH']),
+                        "latitude": "64.752895",
+                        "latitudeRef": "N",
+                        "longitude": "14.53861166666667",
+                        "longitudeRef": "W",
+                        "time": 1605306885,
+                        "width": 400,
+                        "height": 600,
+                        "mentionedUserIds": [
+                            "user_001"
+                        ],
+                        "accessLevel": "everyone"
+                    }
+                ]
+            }
+        )
+        response = self._post_req_from_jon(
+            endpoint=f'/trips/{new_trip.trip_id}/photos',
+            method='delete',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "photoIds": [new_photos_response.json['payload'][0]['id']]
+            }
+        )
+        expected_res = {
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1608224337
+        }
+        self._assert_response(
+            expected_code=200,
+            expected_res=expected_res,
+            response=response,
+            excludes=[
+                'timestamp',
+            ]
+        )
+        delete_all_about_given_trip(trip_id=new_trip_id)
+
+    def test_patch_trip_photos(self):
+        response = self._post_req_from_jon(
+            endpoint=f'/trips/trip_01/photos',
+            method='patch',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "photoIds": [
+                    "photo_01_1",
+                    "photo_01_2"
+                ],
+                "accessLevel": "mockAccessLevel"
+            }
+        )
+        expected_res = {
+            "payload": [
+                {
+                    "id": "photo_01_1",
+                    "accessLevel": "mockAccessLevel",
+                    "tripId": "trip_01",
+                    "status": "confirmed",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "location": "Westeros",
+                    "country": "Westeros",
+                    "createTime": 1596142628628,
+                    "uploadTime": 1596142628728,
+                    "width": 768,
+                    "height": 1365,
+                    "lqSrc": "photo_1.jpg",
+                    "src": "photo_1.jpg",
+                    "likedNb": 7
+                },
+                {
+                    "id": "photo_01_2",
+                    "accessLevel": "mockAccessLevel",
+                    "tripId": "trip_01",
+                    "status": "confirmed",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "location": "Westeros",
+                    "country": "Westeros",
+                    "createTime": 1596142638628,
+                    "uploadTime": 1596142638728,
+                    "width": 374,
+                    "height": 280,
+                    "lqSrc": "photo_2.jpg",
+                    "src": "photo_2.jpg",
+                    "likedNb": 0
+                }
+            ],
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1622584999
+        }
+        self._assert_response(
+            expected_code=200,
+            expected_res=expected_res,
+            response=response,
+            excludes=[
+                'timestamp',
+            ]
+        )
+        # change back
+        self._post_req_from_jon(
+            endpoint=f'/trips/trip_01/photos',
+            method='patch',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "photoIds": [
+                    "photo_01_1",
+                    "photo_01_2"
+                ],
+                "accessLevel": "everyone"
+            }
+        )

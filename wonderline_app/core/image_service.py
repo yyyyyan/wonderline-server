@@ -173,5 +173,6 @@ def upload_default_avatar_if_possible():
 
 
 def remove_image_by_url(url: str):
-    object_name = url.split(os.environ['MINIO_PHOTOS_BUCKET_NAME'])[1]
-    remove_object_from_minio(bucket_name=os.environ['MINIO_PHOTOS_BUCKET_NAME'], object_name=object_name)
+    photos_bucket_name = os.environ['MINIO_PHOTOS_BUCKET_NAME']
+    object_name = url.split(photos_bucket_name)[1]
+    remove_object_from_minio(bucket_name=photos_bucket_name, object_name=object_name)

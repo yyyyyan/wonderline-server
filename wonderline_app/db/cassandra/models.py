@@ -32,16 +32,16 @@ def get_filtered_models(cls: Type[Model], primary_key: str, id_value: str, sort_
                         access_level=None, start_index=0) -> List[Model]:
     sort_by = SORTING_MAPPING[sort_by]
     models = cls.objects(getattr(cls, primary_key) == id_value).order_by(sort_by)
-    if nb == -1:
+    if nb is None:
         models = models.limit(None)
     elif nb < 0:
-        raise ValueError(f"nb expected positive or -1, got {nb}")
+        raise ValueError(f"nb expected positive or None(no limit), got {nb}")
     else:
         models = models.limit(start_index + nb)
 
     if access_level is not None:
         models = [model for model in models if model.access_level == access_level]
-    if nb == -1:
+    if nb is None:
         return models[start_index:]
     else:
         return models[start_index:start_index + nb]
@@ -341,7 +341,7 @@ class Photo(Model, PhotoUtils):
         liked_users.sort(key=lambda x: getattr(x, sort_by))
         return liked_users[:nb]
 
-    def get_mentioned_users_info(self, sort_by: str, nb: int = -1) -> List[User]:
+    def get_mentioned_users_info(self, sort_by: str, nb: int = None) -> List[User]:
         mentioned_users = []
         for uid in self.mentioned_users:
             try:
@@ -350,6 +350,8 @@ class Photo(Model, PhotoUtils):
                 user = None
             mentioned_users.append(user)
         mentioned_users.sort(key=lambda x: getattr(x, sort_by))
+        if nb is None:
+            return mentioned_users
         return mentioned_users[:nb]
 
     def get_photo_information(self, photo_id: str, liked_users_sort_by: str = SortType.CREATE_TIME.value,
@@ -417,12 +419,12 @@ class Trip(Model, TripUtils):
             LOGGER.warning(f"Trip {trip_id} is not found.")
             raise TripNotFound(f"Trip {trip_id} is not found in Cassandra database.")
 
-    def get_complete_attributes(self, users_sort_type, user_nb) -> Dict:
-        self.users = User.get_users_by_ids(user_ids=self.users, sort_by=users_sort_type, user_nb=user_nb,
-                                           start_index=0, sort_desc=False)
+    def get_complete_attributes(self, users_sort_type: str, user_nb: int = None) -> Dict:
+        self.users = User.get_users_by_ids(user_ids=self.users, sort_by=users_sort_type, start_index=0, user_nb=user_nb,
+                                           sort_desc=False)
         return self.to_dict()
 
-    def get_users(self, users_sort_type, user_nb, start_index) -> List[Dict]:
+    def get_users(self, users_sort_type, start_index: int, user_nb: int = None) -> List[Dict]:
         users = User.get_users_by_ids(user_ids=self.users, sort_by=users_sort_type, user_nb=user_nb,
                                       start_index=start_index, sort_desc=False)
         return [u.to_reduced_dict() for u in users]
@@ -519,8 +521,8 @@ class PhotosByTrip(Model, PhotoUtils):
         }
 
     @classmethod
-    def get_filtered_photos(cls, trip_id: str, sort_by: str, nb: int, start_index: int, access_level: str
-                            ) -> List[Dict]:
+    def get_filtered_photos(cls, trip_id: str, sort_by: str, access_level: str, start_index: int,
+                            nb: int = None) -> List[Dict]:
         photos = get_filtered_models(
             cls=cls,
             primary_key='trip_id',
@@ -663,7 +665,15 @@ def delete_all_about_given_trip(trip_id: str, photo_ids=None):
             create_time=trip.create_time
         )
         trips_by_user_record.delete()
-    if photo_ids is not None:
+    delete_photos(trip_id, photo_ids)
+    trip.delete()
+
+
+def delete_photos(trip_id: str, photo_ids: List[str]):
+    # 1. Delete photo in Photo
+    # 2. Delete photo in PhotosByTrip
+    # 3. Delete images in minio
+    if photo_ids is not None and len(photo_ids) > 0:
         for photo_id in photo_ids:
             photo = Photo.get(photo_id=photo_id)
             PhotosByTrip.get(
@@ -675,4 +685,3 @@ def delete_all_about_given_trip(trip_id: str, photo_ids=None):
             remove_image_by_url(photo.high_quality_src)
             remove_image_by_url(photo.src)
             remove_image_by_url(photo.low_quality_src)
-    trip.delete()
