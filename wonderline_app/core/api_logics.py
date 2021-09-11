@@ -32,7 +32,7 @@ def handle_request(func: Callable, *args, **kwargs) -> Union[Dict, Tuple[Dict, i
     response = Response()
     for arg_key, arg_value in kwargs.items():
         # TODO: handle the case where the value is too long to print
-        LOGGER.info(f"Receive arguments: key: {arg_key}, type: {type(arg_key)}, value: {arg_value}")
+        LOGGER.info(f"Receive arguments: key: {arg_key}, type: {type(arg_key)}, value: {str(arg_value)[:500]} ...")
     try:
         func_response = func(*args, **kwargs)
     except APIError as exp:
@@ -444,7 +444,7 @@ def upload_trip_photos(trip_id: str, original_photos: List[Dict]) -> Tuple[List[
             width=original_photo['width'],
             height=original_photo['height'],
             low_quality_src=size2url[ImageSize.SMALL.name],
-            src=size2url[ImageSize.MEDIUM.name],
+            src=size2url[ImageSize.ORIGINAL.name],
             access_level=original_photo['accessLevel']
         )
         Photo.create_from_reduced_photo(
