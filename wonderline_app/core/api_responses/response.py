@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Dict
 
-from wonderline_app.utils import convert_date_to_timestamp_in_ms_unit
+from wonderline_app.utils import convert_date_to_timestamp_in_expected_unit
 
 
 class CodeMessage:

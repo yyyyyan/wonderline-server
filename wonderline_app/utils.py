@@ -1,6 +1,7 @@
 import base64
 import datetime
 import uuid
+from enum import Enum, auto
 
 import reverse_geocoder
 import yaml
@@ -9,8 +10,17 @@ import yaml
 import logging.config
 
 
-def convert_date_to_timestamp_in_ms_unit(date: datetime.datetime):
-    return date.timestamp() * 1000
+class TimeUnit(Enum):
+    SECOND = auto()
+    MILLISECOND = auto()
+
+
+def convert_date_to_timestamp_in_expected_unit(date: datetime.datetime, expected_unit: TimeUnit = TimeUnit.SECOND):
+    convert_value_mapping = {
+        TimeUnit.SECOND: 1,
+        TimeUnit.MILLISECOND: 1000
+    }
+    return int(date.timestamp() * convert_value_mapping[expected_unit])  # convert to int to remove decimal part
 
 
 def load_yaml_config(config_file_path):

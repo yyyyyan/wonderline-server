@@ -18,7 +18,7 @@ from wonderline_app.core.image_service import remove_image_by_url
 from wonderline_app.db.cassandra.exceptions import PhotoNotFound, TripNotFound, CommentNotFound
 from wonderline_app.db.postgres.exceptions import UserNotFound
 from wonderline_app.db.postgres.models import User
-from wonderline_app.utils import convert_date_to_timestamp_in_ms_unit, get_current_timestamp, get_uuid
+from wonderline_app.utils import convert_date_to_timestamp_in_expected_unit, get_current_timestamp, get_uuid
 
 LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class Reply(UserType):
         return {
             "id": self.reply_id,
             "user": User.get_user_attributes_or_none(user_id=self.user, reduced=True),
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
             "content": self.content,
             "likedNb": self.liked_nb
         }
@@ -138,8 +138,8 @@ class ReducedPhoto(UserType):
             "status": self.status,
             "location": self.location,
             "country": self.country,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
-            "uploadTime": convert_date_to_timestamp_in_ms_unit(self.upload_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
+            "uploadTime": convert_date_to_timestamp_in_expected_unit(self.upload_time),
             "width": self.width,
             "height": self.height,
             "lqSrc": self.low_quality_src,
@@ -182,7 +182,7 @@ class Comment(Model):
     def to_dict(self) -> Dict:
         return {
             "id": self.comment_id,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
             "user": self.user,
             "content": self.content,
             "likedNb": self.liked_nb,
@@ -224,7 +224,7 @@ class CommentsByPhoto(Model):
     def to_dict(self) -> Dict:
         return {
             "id": self.comment_id,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
             "user": User.get_user_attributes_or_none(user_id=self.user, reduced=True),
             "content": self.content,
             "likedNb": self.liked_nb,
@@ -311,8 +311,8 @@ class Photo(Model, PhotoUtils):
             "status": self.status,
             "location": self.location,
             "country": self.country,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
-            "uploadTime": convert_date_to_timestamp_in_ms_unit(self.upload_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
+            "uploadTime": convert_date_to_timestamp_in_expected_unit(self.upload_time),
             "width": self.width,
             "height": self.height,
             "lqSrc": self.low_quality_src,
@@ -404,9 +404,9 @@ class Trip(Model, TripUtils):
             "name": self.name,
             "description": self.description,
             "users": [u.to_reduced_dict() for u in self.users],
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
-            "beginTime": convert_date_to_timestamp_in_ms_unit(self.begin_time) if self.begin_time else None,
-            "endTime": convert_date_to_timestamp_in_ms_unit(self.end_time) if self.end_time else None,
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
+            "beginTime": convert_date_to_timestamp_in_expected_unit(self.begin_time) if self.begin_time else None,
+            "endTime": convert_date_to_timestamp_in_expected_unit(self.end_time) if self.end_time else None,
             "photoNb": self.photo_nb,
             "coverPhoto": self.cover_photo.to_dict() if self.cover_photo else None
         }
@@ -451,15 +451,15 @@ class TripsByUser(Model, TripUtils):
         return {
             "id": self.trip_id,
             "ownerId": self.owner_id,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
             "tripTd": self.trip_id,
             "accessLevel": self.access_level,
             "status": self.status,
             "name": self.name,
             "description": self.description,
             "users": [u.to_reduced_dict() for u in self.users],
-            "beginTime": convert_date_to_timestamp_in_ms_unit(self.begin_time) if self.begin_time else None,
-            "endTime": convert_date_to_timestamp_in_ms_unit(self.end_time) if self.end_time else None,
+            "beginTime": convert_date_to_timestamp_in_expected_unit(self.begin_time) if self.begin_time else None,
+            "endTime": convert_date_to_timestamp_in_expected_unit(self.end_time) if self.end_time else None,
             "photoNb": self.photo_nb,
             "coverPhoto": self.cover_photo.to_reduced_photo_dict() if self.cover_photo else None
         }
@@ -505,14 +505,14 @@ class PhotosByTrip(Model, PhotoUtils):
     def to_dict(self) -> Dict:
         return {
             "tripId": self.trip_id,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
             "id": self.photo_id,
             "user": User.get_user_attributes_or_none(user_id=self.owner, reduced=True),
             "accessLevel": self.access_level,
             "status": self.status,
             "location": self.location,
             "country": self.country,
-            "uploadTime": convert_date_to_timestamp_in_ms_unit(self.upload_time),
+            "uploadTime": convert_date_to_timestamp_in_expected_unit(self.upload_time),
             "width": self.width,
             "height": self.height,
             "lqSrc": self.low_quality_src,
@@ -565,7 +565,7 @@ class AlbumsByUser(Model):
         return {
             "id": self.album_id,
             "accessLevel": self.access_level,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
             "coverPhotos": [photo.to_dict() for photo in self.cover_photos]
         }
 
@@ -597,7 +597,7 @@ class MentionsByUser(Model):
             "id": self.mention_id,
             "photo": self.photo.to_dict(),
             "accessLevel": self.access_level,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time),
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
         }
 
 
@@ -635,7 +635,7 @@ class HighlightsByUser(Model):
             "accessLevel": self.access_level,
             "coverPhoto": self.cover_photo.to_dict() if self.cover_photo else None,
             "description": self.description,
-            "createTime": convert_date_to_timestamp_in_ms_unit(self.create_time)
+            "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time)
         }
 
 

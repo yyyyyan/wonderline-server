@@ -2,7 +2,6 @@ import os
 import unittest
 
 from wonderline_app import APP
-from wonderline_app.core.api_logics import upload_trip_photos
 from wonderline_app.db.cassandra.models import delete_all_about_given_trip, create_and_return_new_trip
 from wonderline_app.db.postgres.init import db_session
 from wonderline_app.db.postgres.models import User
@@ -113,7 +112,7 @@ class ApiTEST(unittest.TestCase):
                     "name": "Jon Snow",
                     "avatarSrc": "avatar.png"
                 },
-                "createTime": 1596134528628,
+                "createTime": 1596134528,
                 "signature": "The king of the North, Danny is my QUEEN!",
                 "profileLqSrc": "bkg.png",
                 "profileSrc": "bkg.png",
@@ -158,7 +157,7 @@ class ApiTEST(unittest.TestCase):
                     "name": "Jon Snow",
                     "avatarSrc": "avatar.png"
                 },
-                "createTime": 1596134528628,
+                "createTime": 1596134528,
                 "signature": "The king of the North, Danny is my QUEEN!",
                 "profileLqSrc": "bkg.png",
                 "profileSrc": "bkg.png",
@@ -300,7 +299,7 @@ class ApiTEST(unittest.TestCase):
                     "name": "Daenerys Targaryen",
                     "avatarSrc": "avatar.png"
                 },
-                "createTime": 1596134628628,
+                "createTime": 1596134628,
                 "signature": "How many times must I say no before you understand?",
                 "profileLqSrc": "bkg.png",
                 "profileSrc": "bkg.png",
@@ -369,9 +368,9 @@ class ApiTEST(unittest.TestCase):
                      'avatarSrc': 'avatar.png'},
                     {'id': 'user_005', 'accessLevel': 'everyone', 'name': 'Samwell Tarly',
                      'avatarSrc': 'avatar.png'}],
-                'createTime': 1596142528628,
-                'beginTime': 1596142628628,
-                'endTime': 1596143628628,
+                'createTime': 1596142528,
+                'beginTime': 1596142628,
+                'endTime': 1596143628,
                 'photoNb': 9,
                 'coverPhoto': {
                     'id': 'photo_01_2', 'accessLevel': 'everyone', 'tripId': 'trip_01',
@@ -379,7 +378,7 @@ class ApiTEST(unittest.TestCase):
                     'user': {'id': 'user_001', 'accessLevel': 'everyone',
                              'name': 'Jon Snow', 'avatarSrc': 'avatar.png'},
                     'location': 'Westeros', 'country': 'Westeros',
-                    'createTime': 1596142638628, 'uploadTime': 1596142638728,
+                    'createTime': 1596142638, 'uploadTime': 1596142638,
                     'width': 374, 'height': 280, 'lqSrc': 'photo_2.jpg',
                     'src': 'photo_2.jpg', 'likedNb': 0}}], 'feedbacks': [],
             'errors': [], 'timestamp': 1598132005855}
@@ -440,8 +439,8 @@ class ApiTEST(unittest.TestCase):
                                 },
                                 "location": "Westeros",
                                 "country": "Westeros",
-                                "createTime": 1596142688628,
-                                "uploadTime": 1596142688728,
+                                "createTime": 1596142688,
+                                "uploadTime": 1596142688,
                                 "width": 1920,
                                 "height": 2716,
                                 "lqSrc": "photo_7.jpg",
@@ -451,7 +450,7 @@ class ApiTEST(unittest.TestCase):
                             "ratioType": "vertical"
                         }
                     ],
-                    "createTime": 1596142628628
+                    "createTime": 1596142628
                 },
                 {
                     "id": "album_001_3",
@@ -471,8 +470,8 @@ class ApiTEST(unittest.TestCase):
                                 },
                                 "location": "Westeros",
                                 "country": "Westeros",
-                                "createTime": 1596142658628,
-                                "uploadTime": 1596142658728,
+                                "createTime": 1596142658,
+                                "uploadTime": 1596142658,
                                 "width": 640,
                                 "height": 1136,
                                 "lqSrc": "photo_4.jpg",
@@ -495,8 +494,8 @@ class ApiTEST(unittest.TestCase):
                                 },
                                 "location": "Westeros",
                                 "country": "Westeros",
-                                "createTime": 1596142678628,
-                                "uploadTime": 1596142678728,
+                                "createTime": 1596142678,
+                                "uploadTime": 1596142678,
                                 "width": 2560,
                                 "height": 1565,
                                 "lqSrc": "photo_6.jpg",
@@ -506,7 +505,7 @@ class ApiTEST(unittest.TestCase):
                             "ratioType": "vertical"
                         }
                     ],
-                    "createTime": 1596142738628
+                    "createTime": 1596142738
                 }
             ],
             "feedbacks": [],
@@ -546,8 +545,8 @@ class ApiTEST(unittest.TestCase):
                         },
                         "location": "Westeros",
                         "country": "Westeros",
-                        "createTime": 1596142638628,
-                        "uploadTime": 1596142638728,
+                        "createTime": 1596142638,
+                        "uploadTime": 1596142638,
                         "width": 374,
                         "height": 280,
                         "lqSrc": "photo_2.jpg",
@@ -571,8 +570,8 @@ class ApiTEST(unittest.TestCase):
                         },
                         "location": "Westeros",
                         "country": "Westeros",
-                        "createTime": 1596142658628,
-                        "uploadTime": 1596142658728,
+                        "createTime": 1596142658,
+                        "uploadTime": 1596142658,
                         "width": 640,
                         "height": 1136,
                         "lqSrc": "photo_4.jpg",
@@ -647,9 +646,9 @@ class ApiTEST(unittest.TestCase):
                             "avatarSrc": "avatar.png"
                         }
                     ],
-                    "createTime": 1596142528628,
-                    "beginTime": 1596142628628,
-                    "endTime": 1596143628628,
+                    "createTime": 1596142528,
+                    "beginTime": 1596142628,
+                    "endTime": 1596143628,
                     "photoNb": 9,
                     "coverPhoto": {
                         "id": "photo_01_2",
@@ -664,8 +663,8 @@ class ApiTEST(unittest.TestCase):
                         },
                         "location": "Westeros",
                         "country": "Westeros",
-                        "createTime": 1596142638628,
-                        "uploadTime": 1596142638728,
+                        "createTime": 1596142638,
+                        "uploadTime": 1596142638,
                         "width": 374,
                         "height": 280,
                         "lqSrc": "photo_2.jpg",
@@ -760,8 +759,8 @@ class ApiTEST(unittest.TestCase):
                     },
                     "location": "Westeros",
                     "country": "Westeros",
-                    "createTime": 1596142648628,
-                    "uploadTime": 1596142648728,
+                    "createTime": 1596142648,
+                    "uploadTime": 1596142648,
                     "width": 640,
                     "height": 1136,
                     "lqSrc": "photo_3.jpg",
@@ -781,8 +780,8 @@ class ApiTEST(unittest.TestCase):
                     },
                     "location": "Westeros",
                     "country": "Westeros",
-                    "createTime": 1596142658628,
-                    "uploadTime": 1596142658728,
+                    "createTime": 1596142658,
+                    "uploadTime": 1596142658,
                     "width": 1920,
                     "height": 1080,
                     "lqSrc": "photo_4.jpg",
@@ -826,8 +825,8 @@ class ApiTEST(unittest.TestCase):
                     },
                     "location": "Westeros",
                     "country": "Westeros",
-                    "createTime": 1596142628628,
-                    "uploadTime": 1596142628728,
+                    "createTime": 1596142628,
+                    "uploadTime": 1596142628,
                     "width": 768,
                     "height": 1365,
                     "lqSrc": "photo_1.jpg",
@@ -870,7 +869,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Red Dragon",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142629728,
+                                "createTime": 1596142629,
                                 "content": "what?",
                                 "likedNb": 3
                             },
@@ -882,7 +881,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Blue Dragon",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142639728,
+                                "createTime": 1596142639,
                                 "content": "good",
                                 "likedNb": 3
                             }
@@ -894,7 +893,7 @@ class ApiTEST(unittest.TestCase):
                             "name": "Daenerys Targaryen",
                             "avatarSrc": "avatar.png"
                         },
-                        "createTime": 1596142639628,
+                        "createTime": 1596142639,
                         "content": "hello",
                         "likedNb": 7
                     },
@@ -909,7 +908,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Daenerys Targaryen",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142629728,
+                                "createTime": 1596142629,
                                 "content": "what?",
                                 "likedNb": 3
                             },
@@ -921,7 +920,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Cersei Lannister",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142639728,
+                                "createTime": 1596142639,
                                 "content": "good",
                                 "likedNb": 4
                             }
@@ -933,7 +932,7 @@ class ApiTEST(unittest.TestCase):
                             "name": "Jon Snow",
                             "avatarSrc": "avatar.png"
                         },
-                        "createTime": 1596142629628,
+                        "createTime": 1596142629,
                         "content": "hi",
                         "likedNb": 7
                     }
@@ -972,7 +971,7 @@ class ApiTEST(unittest.TestCase):
                                 "name": "Red Dragon",
                                 "avatarSrc": "avatar.png"
                             },
-                            "createTime": 1596142629728,
+                            "createTime": 1596142629,
                             "content": "what?",
                             "likedNb": 3
                         },
@@ -984,7 +983,7 @@ class ApiTEST(unittest.TestCase):
                                 "name": "Blue Dragon",
                                 "avatarSrc": "avatar.png"
                             },
-                            "createTime": 1596142639728,
+                            "createTime": 1596142639,
                             "content": "good",
                             "likedNb": 3
                         }
@@ -996,7 +995,7 @@ class ApiTEST(unittest.TestCase):
                         "name": "Daenerys Targaryen",
                         "avatarSrc": "avatar.png"
                     },
-                    "createTime": 1596142639628,
+                    "createTime": 1596142639,
                     "content": "hello",
                     "likedNb": 7
                 },
@@ -1011,7 +1010,7 @@ class ApiTEST(unittest.TestCase):
                                 "name": "Daenerys Targaryen",
                                 "avatarSrc": "avatar.png"
                             },
-                            "createTime": 1596142629728,
+                            "createTime": 1596142629,
                             "content": "what?",
                             "likedNb": 3
                         },
@@ -1023,7 +1022,7 @@ class ApiTEST(unittest.TestCase):
                                 "name": "Cersei Lannister",
                                 "avatarSrc": "avatar.png"
                             },
-                            "createTime": 1596142639728,
+                            "createTime": 1596142639,
                             "content": "good",
                             "likedNb": 4
                         }
@@ -1035,7 +1034,7 @@ class ApiTEST(unittest.TestCase):
                         "name": "Jon Snow",
                         "avatarSrc": "avatar.png"
                     },
-                    "createTime": 1596142629628,
+                    "createTime": 1596142629,
                     "content": "hi",
                     "likedNb": 7
                 }
@@ -1069,7 +1068,7 @@ class ApiTEST(unittest.TestCase):
                         "name": "Blue Dragon",
                         "avatarSrc": "avatar.png"
                     },
-                    "createTime": 1596142639728,
+                    "createTime": 1596142639,
                     "content": "good",
                     "likedNb": 3
                 },
@@ -1081,7 +1080,7 @@ class ApiTEST(unittest.TestCase):
                         "name": "Samwell Tarly",
                         "avatarSrc": "avatar.png"
                     },
-                    "createTime": 1596146639728,
+                    "createTime": 1596146639,
                     "content": "yes",
                     "likedNb": 1
                 }
@@ -1186,7 +1185,7 @@ class ApiTEST(unittest.TestCase):
                             "avatarSrc": "avatar.png"
                         }
                     ],
-                    "createTime": 1603142196383,
+                    "createTime": 1603142196,
                     "beginTime": None,
                     "endTime": None,
                     "photoNb": 0,
@@ -1259,7 +1258,7 @@ class ApiTEST(unittest.TestCase):
                             "avatarSrc": "avatar.png"
                         }
                     ],
-                    "createTime": 1603575824699,
+                    "createTime": 1603575824,
                     "beginTime": None,
                     "endTime": None,
                     "photoNb": 0,
@@ -1359,8 +1358,8 @@ class ApiTEST(unittest.TestCase):
                     },
                     "location": "14.53861166666667 W, 64.752895 N",
                     "country": "Royrvik, NO",
-                    "createTime": 1606520321002,
-                    "uploadTime": 1605306885000,
+                    "createTime": 1606520321,
+                    "uploadTime": 1605306885,
                     "width": 400,
                     "height": 600,
                     "lqSrc": "http://localhost/photos/ea8a259a-30f8-11eb-8474-0242ac160005.png",
@@ -1417,8 +1416,8 @@ class ApiTEST(unittest.TestCase):
                     },
                     "location": "Westeros",
                     "country": "Westeros",
-                    "createTime": 1596142628628,
-                    "uploadTime": 1596142628728,
+                    "createTime": 1596142628,
+                    "uploadTime": 1596142628,
                     "width": 768,
                     "height": 1365,
                     "lqSrc": "photo_1.jpg",
@@ -1491,7 +1490,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Red Dragon",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142629728,
+                                "createTime": 1596142629,
                                 "content": "what?",
                                 "likedNb": 3
                             },
@@ -1503,7 +1502,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Blue Dragon",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142639728,
+                                "createTime": 1596142639,
                                 "content": "good",
                                 "likedNb": 3
                             },
@@ -1515,7 +1514,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Samwell Tarly",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596146639728,
+                                "createTime": 1596146639,
                                 "content": "yes",
                                 "likedNb": 1
                             }
@@ -1527,7 +1526,7 @@ class ApiTEST(unittest.TestCase):
                             "name": "Daenerys Targaryen",
                             "avatarSrc": "avatar.png"
                         },
-                        "createTime": 1596142639628,
+                        "createTime": 1596142639,
                         "content": "hello",
                         "likedNb": 7
                     },
@@ -1542,7 +1541,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Daenerys Targaryen",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142629728,
+                                "createTime": 1596142629,
                                 "content": "what?",
                                 "likedNb": 3
                             },
@@ -1554,7 +1553,7 @@ class ApiTEST(unittest.TestCase):
                                     "name": "Cersei Lannister",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142639728,
+                                "createTime": 1596142639,
                                 "content": "good",
                                 "likedNb": 4
                             }
@@ -1566,7 +1565,7 @@ class ApiTEST(unittest.TestCase):
                             "name": "Jon Snow",
                             "avatarSrc": "avatar.png"
                         },
-                        "createTime": 1596142629628,
+                        "createTime": 1596142629,
                         "content": "hi",
                         "likedNb": 7
                     }
@@ -1679,8 +1678,8 @@ class ApiTEST(unittest.TestCase):
                     },
                     "location": "Westeros",
                     "country": "Westeros",
-                    "createTime": 1596142628628,
-                    "uploadTime": 1596142628728,
+                    "createTime": 1596142628,
+                    "uploadTime": 1596142628,
                     "width": 768,
                     "height": 1365,
                     "lqSrc": "photo_1.jpg",
@@ -1700,8 +1699,8 @@ class ApiTEST(unittest.TestCase):
                     },
                     "location": "Westeros",
                     "country": "Westeros",
-                    "createTime": 1596142638628,
-                    "uploadTime": 1596142638728,
+                    "createTime": 1596142638,
+                    "uploadTime": 1596142638,
                     "width": 374,
                     "height": 280,
                     "lqSrc": "photo_2.jpg",

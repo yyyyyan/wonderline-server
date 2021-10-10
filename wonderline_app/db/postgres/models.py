@@ -24,7 +24,7 @@ from wonderline_app.core.image_service import DEFAULT_AVATAR_URL
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.init import db_session, postgres_meta_data
-from wonderline_app.utils import convert_date_to_timestamp_in_ms_unit, edit_distance
+from wonderline_app.utils import convert_date_to_timestamp_in_expected_unit, edit_distance
 
 LOGGER = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class User(Base, UserMixin):
             if attr_key in self.__reduced_keys:
                 user_dict['reducedUser'][attr_key] = user_dict[attr_key]
                 del user_dict[attr_key]
-        user_dict['createTime'] = convert_date_to_timestamp_in_ms_unit(user_dict['createTime'])
+        user_dict['createTime'] = convert_date_to_timestamp_in_expected_unit(user_dict['createTime'])
         return user_dict
 
     def get_complete_attributes(self, follower_nb: int, sort_by: str = SortType.CREATE_TIME.value,
