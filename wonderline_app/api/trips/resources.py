@@ -165,13 +165,15 @@ class TripPhoto(Resource):
         user_token = args.get("userToken")
         access_level = request.json.get('accessLevel', None)
         mentioned_users = request.json.get('mentionedUsers', None)
+        location = request.json.get('location', None)
         return handle_request(
             func=update_trip_photo,
             user_token=user_token,
             trip_id=tripId,
             photo_id=photoId,
             access_level=access_level,
-            mentioned_users=mentioned_users
+            mentioned_users=mentioned_users,
+            location=location
         )
 
 

@@ -19,7 +19,8 @@ from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordInco
 from wonderline_app.db.postgres.models import User
 from wonderline_app.utils import get_current_timestamp, construct_location, infer_country_from_location, get_uuid
 
-DEFAULT_AVATAR = "https://img2.pngio.com/united-states-avatar-organization-information-png-512x512px-user-avatar-png-820_512.jpg"
+DEFAULT_AVATAR = \
+    "https://img2.pngio.com/united-states-avatar-organization-information-png-512x512px-user-avatar-png-820_512.jpg"
 
 LOGGER = logging.getLogger(__name__)
 
@@ -217,8 +218,8 @@ def get_complete_trip(trip_id: str, users_sort_type: str = SortType.CREATE_TIME.
 
 
 @user_token_required
-def get_users_by_trip(trip_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 12, start_index: int = 0) -> \
-        List[Dict]:
+def get_users_by_trip(trip_id: str, sort_type: str = SortType.CREATE_TIME.value, nb: int = 12,
+                      start_index: int = 0) -> List[Dict]:
     """Get all the users for a trip."""
     trip = get_trip(trip_id=trip_id)
     if trip:
@@ -401,15 +402,48 @@ def update_trip(trip_id: str, name: str, description: str, user_ids: List[str]):
     return trip.get_complete_attributes(users_sort_type=SortType.CREATE_TIME.value, user_nb=None)
 
 
-@user_token_required
-def search_users(query: str, users_sort_type: str = SearchSortType.BEST_MATCH.value, start_index: int = 0,
-                 nb: int = 12) -> List[Dict]:
+def _search_users(query: str, users_sort_type: str = SearchSortType.BEST_MATCH.value, start_index: int = 0,
+                  nb: int = 12) -> List[Dict]:
     return User.search_users(
         name_query=query,
         start_index=start_index,
         nb=nb,
         sort_type=users_sort_type
     )
+
+
+@user_token_required
+def search_users(query: str, users_sort_type: str = SearchSortType.BEST_MATCH.value, start_index: int = 0,
+                 nb: int = 12) -> List[Dict]:
+    return _search_users(
+        query=query,
+        users_sort_type=users_sort_type,
+        start_index=start_index,
+        nb=nb
+    )
+
+
+@user_token_required
+def search_users_in_trip(trip_id: str, query: str, users_sort_type: str = SearchSortType.BEST_MATCH.value,
+                         start_index: int = 0, nb: int = 12) -> List[Dict]:
+    trip = Trip.get_trip_by_trip_id(trip_id=trip_id)
+    all_matched_users = _search_users(
+        query=query,
+        users_sort_type=users_sort_type,
+        start_index=start_index,
+        nb=nb
+    )
+    users_in_trip = trip.get_users(
+        users_sort_type=SortType.CREATE_TIME.value,
+        start_index=0,
+        user_nb=None
+    )
+    user_ids_in_trip = set([user['id'] for user in users_in_trip])
+    matched_trip_users = []
+    for user in all_matched_users:
+        if user['id'] in user_ids_in_trip:
+            matched_trip_users.append(user)
+    return matched_trip_users
 
 
 @user_token_required
@@ -426,10 +460,11 @@ def upload_trip_photos(trip_id: str, original_photos: List[Dict]) -> Tuple[List[
         size2url = upload_encoded_image(
             image=original_photo['data'],
             sizes=[ImageSize.ORIGINAL, ImageSize.MEDIUM, ImageSize.SMALL])
-        location = construct_location(longitude=original_photo['longitude'],
-                                      longitude_ref=original_photo['longitudeRef'],
-                                      latitude=original_photo['latitude'],
-                                      latitude_ref=original_photo['latitudeRef'])
+        location = original_photo.get("location",
+                                      construct_location(longitude=original_photo['longitude'],
+                                                         longitude_ref=original_photo['longitudeRef'],
+                                                         latitude=original_photo['latitude'],
+                                                         latitude_ref=original_photo['latitudeRef']))
         country = infer_country_from_location(
             longitude=float(original_photo['longitude']),
             latitude=float(original_photo['latitude']))
@@ -469,7 +504,8 @@ def upload_trip_photos(trip_id: str, original_photos: List[Dict]) -> Tuple[List[
         nb=None), APIFeedback201(message=f"Photos are added successfully")
 
 
-def _update_photo(trip_id: str, photo_id: str, access_level: str, mentioned_users: Optional[List[str]]) -> Photo:
+def _update_photo(trip_id: str, photo_id: str, access_level: str, mentioned_users: Optional[List[str]],
+                  location: Optional[str]) -> Photo:
     photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
     if photo:
         attributes_to_update = {}
@@ -477,6 +513,9 @@ def _update_photo(trip_id: str, photo_id: str, access_level: str, mentioned_user
             attributes_to_update['access_level'] = access_level
         if mentioned_users is not None:
             attributes_to_update['mentioned_users'] = set(mentioned_users)
+        if location is not None:
+            attributes_to_update['location'] = location
+
         photo.update(**attributes_to_update)
         attributes_to_update.pop('mentioned_users', None)
         if len(attributes_to_update.keys()) > 0:
@@ -490,11 +529,12 @@ def _update_photo(trip_id: str, photo_id: str, access_level: str, mentioned_user
 
 
 @user_token_required
-def update_trip_photo(trip_id: str, photo_id: str, access_level: str, mentioned_users: Optional[List[str]]):
+def update_trip_photo(trip_id: str, photo_id: str, access_level: str, mentioned_users: Optional[List[str]],
+                      location: Optional[str]):
     trip = get_trip(trip_id=trip_id)
     if trip:
         try:
-            photo = _update_photo(trip_id, photo_id, access_level, mentioned_users)
+            photo = _update_photo(trip_id, photo_id, access_level, mentioned_users, location)
             return photo.get_photo_information(photo_id=photo_id)
         except PhotoNotFound as e:
             raise APIError404(message=str(e))
@@ -507,7 +547,14 @@ def update_trip_photos(trip_id: str, photo_ids: List[str], access_level: str):
     if trip:
         for photo_id in photo_ids:
             try:
-                updated_photos.append(_update_photo(trip_id, photo_id, access_level, mentioned_users=None))
+                updated_photos.append(
+                    _update_photo(
+                        trip_id,
+                        photo_id,
+                        access_level,
+                        mentioned_users=None,
+                        location=None)
+                )
             except PhotoNotFound as e:
                 raise APIError404(message=str(e))
     return [photo.to_reduced_photo_dict() for photo in updated_photos]

@@ -25,6 +25,7 @@ photo_original_data = trips_namespace.model("PhotoOriginalData", {
     "latitudeRef": fields.String(example="N", required=False, default=None),
     "longitude": fields.String(example="14.53861166666667", required=False, default=None),
     "longitudeRef": fields.String(example="W", required=False, default=None),
+    "location": fields.String(example="Shanghai", required=False, default=None),
     "time": fields.Integer(example=1605306885, required=True),  # original image upload time
     "width": fields.Integer(example=400, required=True),  # it may be optional
     "height": fields.Integer(example=600, required=True),  # it may be optional
@@ -38,7 +39,8 @@ photo_upload_model = trips_namespace.model("OriginalPhotos", {
 
 photo_update_model = trips_namespace.model("PhotoToUpdate", {
     "accessLevel": fields.String(example="everyone", required=False, default=None),
-    "mentionedUsers": fields.List(fields.String(example="user_001", required=False, default=None))
+    "mentionedUsers": fields.List(fields.String(example="user_001", required=False, default=None)),
+    "location": fields.String(example="Shanghai", required=False, default=None)
 })
 photos_update_model = trips_namespace.model("PhotosToUpdate", {
     "photoIds": fields.List(fields.String(example="photo_01_1", required=True)),

@@ -1316,7 +1316,7 @@ class ApiTEST(unittest.TestCase):
             response=response
         )
 
-    def test_post_trip_photos(self):
+    def test_post_trip_photos_without_location_field(self):
         new_trip = create_and_return_new_trip(owner_id='user_001', trip_name='test', user_ids=['user_001'])
         trip_id = new_trip.trip_id
         response = self._post_req_from_jon(
@@ -1389,6 +1389,80 @@ class ApiTEST(unittest.TestCase):
         # delete the test trip and photo from cassandra
         delete_all_about_given_trip(trip_id=new_trip.trip_id, photo_ids=[photo_id])
 
+    def test_post_trip_photos_with_location_field(self):
+        new_trip = create_and_return_new_trip(owner_id='user_001', trip_name='test', user_ids=['user_001'])
+        trip_id = new_trip.trip_id
+        response = self._post_req_from_jon(
+            endpoint=f'/trips/{trip_id}/photos',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "originalPhotos": [
+                    {
+                        "data": encode_image(os.environ['TEST_PHOTO_PATH']),
+                        "latitude": "64.752895",
+                        "latitudeRef": "N",
+                        "longitude": "14.53861166666667",
+                        "longitudeRef": "W",
+                        "location": "Shanghai",
+                        "time": 1605306885,
+                        "width": 400,
+                        "height": 600,
+                        "mentionedUserIds": [
+                            "user_001"
+                        ],
+                        "accessLevel": "everyone"
+                    }
+                ]
+            }
+        )
+        expected_res = {
+            "payload": [
+                {
+                    "id": "ea8c6af8-30f8-11eb-8474-0242ac160005",
+                    "accessLevel": "everyone",
+                    "tripId": "0866515c-30f8-11eb-8474-0242ac160005",
+                    "status": "editing",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "name": "Jon Snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "location": "Shanghai",
+                    "country": "Royrvik, NO",
+                    "createTime": 1605306885,
+                    "uploadTime": 1606520321,
+                    "width": 400,
+                    "height": 600,
+                    "lqSrc": "http://localhost/photos/ea8a259a-30f8-11eb-8474-0242ac160005.png",
+                    "src": "http://localhost/photos/ea8651ea-30f8-11eb-8474-0242ac160005.png",
+                    "likedNb": 0
+                }
+            ],
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1601155452818
+        }
+        photo_id = response.json['payload'][0]['id']
+        self._assert_response(
+            expected_code=201,
+            expected_res=expected_res,
+            response=response,
+            excludes=[
+                'timestamp',
+                'id',
+                'uploadTime',
+                'lqSrc',
+                'src',
+                'tripId',
+                'feedbacks'
+            ]
+        )
+        # delete the test trip and photo from cassandra
+        delete_all_about_given_trip(trip_id=new_trip.trip_id, photo_ids=[photo_id])
+
     def test_patch_trip_photo_expect_success(self):
         response = self._post_req_from_jon(
             endpoint=f'/trips/trip_01/photos/photo_01_1',
@@ -1398,7 +1472,9 @@ class ApiTEST(unittest.TestCase):
             },
             payload={
                 "accessLevel": "everyone",
-                "mentionedUsers": ["user_001", "user_002"]
+                "mentionedUsers": ["user_001", "user_002"],
+                "location": "Shanghai"
+
             }
         )
         expected_res = {
@@ -1414,7 +1490,7 @@ class ApiTEST(unittest.TestCase):
                         "name": "Jon Snow",
                         "avatarSrc": "avatar.png"
                     },
-                    "location": "Westeros",
+                    "location": "Shanghai",
                     "country": "Westeros",
                     "createTime": 1596142628,
                     "uploadTime": 1596142628,
@@ -1592,7 +1668,8 @@ class ApiTEST(unittest.TestCase):
             },
             payload={
                 "accessLevel": "everyone",
-                "mentionedUsers": ["user_001"]
+                "mentionedUsers": ["user_001"],
+                "location": "Westeros",
             }
         )
 
@@ -1735,3 +1812,62 @@ class ApiTEST(unittest.TestCase):
                 "accessLevel": "everyone"
             }
         )
+    def test_search_users_in_trip(self):
+        # create a new trip
+        new_trip = create_and_return_new_trip(owner_id='user_001', trip_name='test trip',
+                                              user_ids=['user_001', 'user_002'])
+        # add users into the trip
+        # user_001: Jon, user_003: Red Dragon
+        self._post_req_from_jon(
+            endpoint=f'/trips/{new_trip.trip_id}',
+            method='patch',
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "name": "new trip name",
+                "description": "new test trip",
+                "userIds": [
+                    "user_001",
+                    "user_003"
+                ],
+            }
+        )
+        # search user in the trip using letter 'n', it is exected to return Jon and Red Dragon only
+        response = self._get_req_from_jon(
+            endpoint=f'/search/trip/{new_trip.trip_id}/users',
+            params={
+                "userToken": 'test',
+                "query": 'n',
+                "sortType": "bestMatch",
+                "startIndex": 0,
+                "nb": 2
+            })
+        expected_res = {
+            "payload": [
+                {
+                    "id": "user_001",
+                    "accessLevel": "everyone",
+                    "name": "Jon Snow",
+                    "avatarSrc": "avatar.png"
+                },
+                {
+                    "id": "user_003",
+                    "accessLevel": "everyone",
+                    "name": "Red Dragon",
+                    "avatarSrc": "avatar.png"
+                },
+
+            ],
+
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1598176302710
+        }
+        self._assert_response(
+            expected_code=200,
+            expected_res=expected_res,
+            response=response,
+            excludes=['timestamp']
+        )
+        delete_all_about_given_trip(trip_id=new_trip.trip_id)
