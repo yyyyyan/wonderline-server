@@ -164,7 +164,7 @@ class TripPhoto(Resource):
         args = trip_photo_parser.parse_args()
         user_token = args.get("userToken")
         access_level = request.json.get('accessLevel', None)
-        mentioned_users = request.json.get('mentionedUsers', None)
+        mentioned_users = request.json.get('mentionedUserIds', None)
         location = request.json.get('location', None)
         return handle_request(
             func=update_trip_photo,

@@ -1472,7 +1472,7 @@ class ApiTEST(unittest.TestCase):
             },
             payload={
                 "accessLevel": "everyone",
-                "mentionedUsers": ["user_001", "user_002"],
+                "mentionedUserIds": ["user_001", "user_002"],
                 "location": "Shanghai"
 
             }
@@ -1668,7 +1668,7 @@ class ApiTEST(unittest.TestCase):
             },
             payload={
                 "accessLevel": "everyone",
-                "mentionedUsers": ["user_001"],
+                "mentionedUserIds": ["user_001"],
                 "location": "Westeros",
             }
         )

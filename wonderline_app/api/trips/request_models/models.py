@@ -39,7 +39,7 @@ photo_upload_model = trips_namespace.model("OriginalPhotos", {
 
 photo_update_model = trips_namespace.model("PhotoToUpdate", {
     "accessLevel": fields.String(example="everyone", required=False, default=None),
-    "mentionedUsers": fields.List(fields.String(example="user_001", required=False, default=None)),
+    "mentionedUserIds": fields.List(fields.String(example="user_001", required=False, default=None)),
     "location": fields.String(example="Shanghai", required=False, default=None)
 })
 photos_update_model = trips_namespace.model("PhotosToUpdate", {
