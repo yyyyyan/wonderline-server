@@ -1,6 +1,6 @@
 USE wonderline;
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -42,7 +42,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -84,7 +84,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -126,7 +126,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -168,7 +168,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -210,7 +210,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -252,7 +252,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -294,7 +294,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -336,7 +336,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO photo (
+INSERT INTO wonderline.photo (
     photo_id,
     trip_id,
     owner,
@@ -378,7 +378,7 @@ INSERT INTO photo (
     {}
 );
 
-INSERT INTO trip (
+INSERT INTO wonderline.trip (
     trip_id,
     owner_id,
     access_level,
@@ -427,7 +427,7 @@ INSERT INTO trip (
     4222
 );
 
-INSERT INTO trips_by_user (
+INSERT INTO wonderline.trips_by_user (
     user_id,
     owner_id,
     trip_id,
@@ -457,7 +457,7 @@ INSERT INTO trips_by_user (
     'photo_01_2'
 );
 
-INSERT INTO trips_by_user (
+INSERT INTO wonderline.trips_by_user (
     user_id,
     owner_id,
     trip_id,
@@ -487,7 +487,7 @@ INSERT INTO trips_by_user (
     'photo_01_2'
 );
 
-INSERT INTO trips_by_user (
+INSERT INTO wonderline.trips_by_user (
     user_id,
     owner_id,
     trip_id,
@@ -517,7 +517,7 @@ INSERT INTO trips_by_user (
     'photo_01_2'
 );
 
-INSERT INTO trips_by_user (
+INSERT INTO wonderline.trips_by_user (
     user_id,
     owner_id,
     trip_id,
@@ -547,7 +547,7 @@ INSERT INTO trips_by_user (
     'photo_01_2'
 );
 
-INSERT INTO trips_by_user (
+INSERT INTO wonderline.trips_by_user (
     user_id,
     owner_id,
     trip_id,
@@ -577,7 +577,7 @@ INSERT INTO trips_by_user (
     'photo_01_2'
 );
 
-INSERT INTO trips_by_user (
+INSERT INTO wonderline.trips_by_user (
     user_id,
     owner_id,
     trip_id,
@@ -607,7 +607,7 @@ INSERT INTO trips_by_user (
     'photo_01_2'
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -639,7 +639,7 @@ INSERT INTO photos_by_trip (
     7
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -671,7 +671,7 @@ INSERT INTO photos_by_trip (
     0
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -703,7 +703,7 @@ INSERT INTO photos_by_trip (
     0
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -735,7 +735,7 @@ INSERT INTO photos_by_trip (
     0
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -767,7 +767,7 @@ INSERT INTO photos_by_trip (
     0
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -799,7 +799,7 @@ INSERT INTO photos_by_trip (
     0
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -831,7 +831,7 @@ INSERT INTO photos_by_trip (
     0
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -863,7 +863,7 @@ INSERT INTO photos_by_trip (
     0
 );
 
-INSERT INTO photos_by_trip (
+INSERT INTO wonderline.photos_by_trip (
     trip_id,
     photo_id,
     owner,
@@ -895,7 +895,7 @@ INSERT INTO photos_by_trip (
     3
 );
 
-INSERT INTO albums_by_user (
+INSERT INTO wonderline.albums_by_user (
     user_id,
     create_time,
     album_id,
@@ -967,7 +967,7 @@ INSERT INTO albums_by_user (
     }
 );
 
-INSERT INTO albums_by_user (
+INSERT INTO wonderline.albums_by_user (
     user_id,
     create_time,
     album_id,
@@ -1020,7 +1020,7 @@ INSERT INTO albums_by_user (
     }
 );
 
-INSERT INTO albums_by_user (
+INSERT INTO wonderline.albums_by_user (
     user_id,
     create_time,
     album_id,
@@ -1073,7 +1073,7 @@ INSERT INTO albums_by_user (
     }
 );
 
-INSERT INTO albums_by_user (
+INSERT INTO wonderline.albums_by_user (
     user_id,
     create_time,
     album_id,
@@ -1107,7 +1107,7 @@ INSERT INTO albums_by_user (
     }
 );
 
-INSERT INTO albums_by_user (
+INSERT INTO wonderline.albums_by_user (
     user_id,
     create_time,
     album_id,
@@ -1141,7 +1141,7 @@ INSERT INTO albums_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1170,7 +1170,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1199,7 +1199,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1228,7 +1228,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1257,7 +1257,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1286,7 +1286,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1315,7 +1315,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1344,7 +1344,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1373,7 +1373,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1402,7 +1402,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1431,7 +1431,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1460,7 +1460,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1489,7 +1489,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO mentions_by_user (
+INSERT INTO wonderline.mentions_by_user (
     user_id,
     create_time,
     mention_id,
@@ -1518,7 +1518,7 @@ INSERT INTO mentions_by_user (
     }
 );
 
-INSERT INTO highlights_by_user (
+INSERT INTO wonderline.highlights_by_user (
     user_id,
     create_time,
     highlight_id,
@@ -1534,7 +1534,7 @@ INSERT INTO highlights_by_user (
     ''
 );
 
-INSERT INTO highlights_by_user (
+INSERT INTO wonderline.highlights_by_user (
     user_id,
     create_time,
     highlight_id,
@@ -1550,7 +1550,7 @@ INSERT INTO highlights_by_user (
     'Declared King of the North'
 );
 
-INSERT INTO highlights_by_user (
+INSERT INTO wonderline.highlights_by_user (
     user_id,
     create_time,
     highlight_id,
@@ -1566,7 +1566,7 @@ INSERT INTO highlights_by_user (
     ''
 );
 
-INSERT INTO highlights_by_user (
+INSERT INTO wonderline.highlights_by_user (
     user_id,
     create_time,
     highlight_id,
@@ -1582,7 +1582,7 @@ INSERT INTO highlights_by_user (
     ''
 );
 
-INSERT INTO highlights_by_user (
+INSERT INTO wonderline.highlights_by_user (
     user_id,
     create_time,
     highlight_id,
@@ -1598,7 +1598,7 @@ INSERT INTO highlights_by_user (
     'Declared Commander of the Night''s Watch'
 );
 
-INSERT INTO highlights_by_user (
+INSERT INTO wonderline.highlights_by_user (
     user_id,
     create_time,
     highlight_id,
@@ -1614,7 +1614,7 @@ INSERT INTO highlights_by_user (
     'Joined the Night''s Watch'
 );
 
-INSERT INTO highlights_by_user (
+INSERT INTO wonderline.highlights_by_user (
     user_id,
     create_time,
     highlight_id,
@@ -1630,7 +1630,7 @@ INSERT INTO highlights_by_user (
     ''
 );
 
-INSERT INTO highlights_by_user (
+INSERT INTO wonderline.highlights_by_user (
     user_id,
     create_time,
     highlight_id,
@@ -1646,7 +1646,7 @@ INSERT INTO highlights_by_user (
     'I and only I, the True Dragon'
 );
 
-INSERT INTO comments_by_photo (
+INSERT INTO wonderline.comments_by_photo (
     photo_id,
     comment_id,
     user,
@@ -1681,7 +1681,7 @@ INSERT INTO comments_by_photo (
     }
 );
 
-INSERT INTO comments_by_photo (
+INSERT INTO wonderline.comments_by_photo (
     photo_id,
     comment_id,
     user,
@@ -1723,7 +1723,7 @@ INSERT INTO comments_by_photo (
     }
 );
 
-INSERT INTO comment (
+INSERT INTO wonderline.comment (
     comment_id,
     user,
     create_time,
@@ -1756,7 +1756,7 @@ INSERT INTO comment (
     }
 );
 
-INSERT INTO comment (
+INSERT INTO wonderline.comment (
     comment_id,
     user,
     create_time,
