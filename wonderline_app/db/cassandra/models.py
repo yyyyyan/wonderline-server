@@ -639,6 +639,54 @@ class HighlightsByUser(Model):
         }
 
 
+class Hashtag(UserType):
+    __type_name__ = 'hashtag'
+
+    name = columns.Text()
+    start_index = columns.SmallInt()
+    end_index = columns.SmallInt()
+
+    def to_dict(self) -> Dict:
+        return {
+            "name": self.name,
+            "start_index": self.start_index,
+            "end_index": self.end_index,
+        }
+
+
+class MentionedUser(UserType):
+    __type_name__ = 'mentioned_user'
+
+    user_id = columns.Text()
+    user_unique_name = columns.Text()
+    start_index = columns.SmallInt()
+    end_index = columns.SmallInt()
+
+    def to_dict(self) -> Dict:
+        return {
+            "user_id": self.user_id,
+            "user_unique_name": self.user_unique_name,
+            "start_index": self.start_index,
+            "end_index": self.end_index,
+        }
+
+
+class EntitiesByComment(Model):
+    __table_name__ = "entities_by_comment"
+    comment_id = columns.Text(primary_key=True)
+    hashtags = columns.List(UserDefinedType(Hashtag))
+    mentioned_users = columns.List(UserDefinedType(MentionedUser))
+    likes = columns.Set(columns.Text)
+
+    def to_dict(self) -> Dict:
+        return {
+            "comment_id": self.comment_id,
+            "hashtags": [hashtag.to_dict() for hashtag in self.hashtags],
+            "mentioned_users": [user.to_dict() for user in self.mentioned_users],
+            "likes": self.likes,
+        }
+
+
 def create_and_return_new_trip(owner_id: str, trip_name: str, user_ids: List[str]) -> Optional[Trip]:
     if user_ids is None or not len(user_ids):
         user_ids = [owner_id]

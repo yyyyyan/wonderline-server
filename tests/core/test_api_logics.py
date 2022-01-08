@@ -931,7 +931,7 @@ class ApiTEST(unittest.TestCase):
                             "avatarSrc": "avatar.png"
                         },
                         "createTime": 1596142639,
-                        "content": "hello",
+                        "content": "hello #wonderline @jon_snow awesome",
                         "likedNb": 7
                     },
                     {
@@ -1037,7 +1037,7 @@ class ApiTEST(unittest.TestCase):
                         "avatarSrc": "avatar.png"
                     },
                     "createTime": 1596142639,
-                    "content": "hello",
+                    "content": "hello #wonderline @jon_snow awesome",
                     "likedNb": 7
                 },
                 {
@@ -1671,7 +1671,7 @@ class ApiTEST(unittest.TestCase):
                             "avatarSrc": "avatar.png"
                         },
                         "createTime": 1596142639,
-                        "content": "hello",
+                        "content": "hello #wonderline @jon_snow awesome",
                         "likedNb": 7
                     },
                     {

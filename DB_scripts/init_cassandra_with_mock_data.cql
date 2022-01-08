@@ -1695,7 +1695,7 @@ INSERT INTO wonderline.comments_by_photo (
     'comment_02',
     'user_002',
     1596142639628,
-    'hello',
+    'hello #wonderline @jon_snow awesome',
     7,
     3,
     {
@@ -1794,4 +1794,29 @@ INSERT INTO wonderline.comment (
             liked_nb: 1
         }
     }
+);
+
+INSERT INTO wonderline.entities_by_comment (
+    comment_id,
+    hashtags,
+    mentioned_users,
+    likes
+) VALUES (
+    'comment_02',
+    [
+        {
+            name: 'wonderline',
+            start_index: 6,
+            end_index: 17
+        }
+    ],
+    [
+        {
+            user_id: 'user_001',
+            user_unique_name: 'jon_snow',
+            start_index: 18,
+            end_index: 27
+        }
+    ],
+    {'user_001', 'user_002', 'user_003', 'user_004', 'user_005', 'user_006', 'user_007'}
 );

@@ -32,6 +32,20 @@ CREATE TYPE IF NOT EXISTS rearranged_photo (
     ratio_type text
 );
 
+CREATE TYPE IF NOT EXISTS hashtag (
+    name text,
+    start_index smallint,
+    end_index smallint
+);
+
+CREATE TYPE IF NOT EXISTS mentioned_user (
+    user_id text,
+    user_unique_name text,
+    start_index smallint,
+    end_index smallint
+);
+
+
 CREATE TABLE IF NOT EXISTS comment (
     comment_id text,
     user text,
@@ -159,4 +173,12 @@ CREATE TABLE IF NOT EXISTS highlights_by_user (
     cover_photo text,
     description text,
     PRIMARY KEY ((user_id), create_time, highlight_id)
+);
+
+CREATE TABLE IF NOT EXISTS entities_by_comment (
+    comment_id text,
+    hashtags list<frozen<hashtag>>,
+    mentioned_users list<frozen<mentioned_user>>,
+    likes set<text>,
+    PRIMARY KEY (comment_id)
 );
