@@ -44,7 +44,7 @@ class User(Base, UserMixin):
     """Sqlalchemy User model"""
     __tablename__ = '_user'
 
-    __reduced_keys = ['id', 'name', 'accessLevel', 'avatarSrc']
+    __reduced_keys = ['id', 'name', 'accessLevel', 'avatarSrc', 'uniqueName']
 
     query = db_session.query_property()
 
@@ -52,6 +52,7 @@ class User(Base, UserMixin):
     email = Column(VARCHAR(254), nullable=False)
     password = Column(CHAR(), nullable=False, unique=True)
     name = Column(VARCHAR(255), nullable=False)
+    uniqueName = Column("unique_name", VARCHAR(255), nullable=False)
     createTime = Column("create_time", TIMESTAMP, nullable=False)
     accessLevel = Column("access_level", VARCHAR(255), default='everyone')
     avatarSrc = Column("avatar_src", TEXT, default=DEFAULT_AVATAR_URL)
@@ -83,17 +84,22 @@ class User(Base, UserMixin):
             raise UserTokenInvalid
 
     @classmethod
-    def does_user_exist(cls, email: str):
+    def does_user_email_exist(cls, email: str) -> bool:
         return cls.query.filter_by(email=email).first() is not None
 
     @classmethod
-    def create_new_user(cls, email: str, name: str, password: str, avatar_url: str) -> User:
+    def does_user_unique_name_exist(cls, unique_name: str) -> bool:
+        return cls.query.filter_by(uniqueName=unique_name).first() is not None
+
+    @classmethod
+    def create_new_user(cls, email: str, name: str, unique_name: str, password: str, avatar_url: str) -> User:
         user_id = str(uuid.uuid1())
         user = User(
             id=user_id,
             email=email,
             password=generate_password_hash(password, method='sha512'),
             name=name,
+            uniqueName=unique_name,
             createTime=datetime.now(),
             avatarSrc=avatar_url
         )

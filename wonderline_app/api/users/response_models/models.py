@@ -12,6 +12,7 @@ reduced_user_model = users_namespace.model("ReducedUser", {
     "id": fields.String(example="user_001"),
     "accessLevel": fields.String(example="everyone"),
     "name": fields.String(example="Jon Snow"),
+    "uniqueName": fields.String(example="jon_snow"),
     "avatarSrc": fields.String(example="https://wonderline-server/images/avatar.png"),
 })
 

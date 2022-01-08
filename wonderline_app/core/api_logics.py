@@ -303,15 +303,18 @@ def get_replies_by_comment(trip_id: str, photo_id: str, comment_id: str, sort_ty
 
 def sign_up(email: str,
             user_name: str,
+            user_unique_name: str,
             password: str,
             photo_data: str) -> [Dict, Feedback]:
-    if User.does_user_exist(email=email):
+    if User.does_user_email_exist(email=email):
         raise APIError409(f"User with email {email} exists, try another email")
+    if User.does_user_unique_name_exist(unique_name=user_unique_name):
+        raise APIError409(f"User with unique name {user_unique_name} exists, try another unique name")
     if photo_data is not None:
         avatar_url = upload_encoded_image(image=photo_data, sizes=[ImageSize.AVATAR])[ImageSize.AVATAR.name]
     else:
         avatar_url = DEFAULT_AVATAR_URL
-    user = User.create_new_user(email=email, name=user_name, password=password, avatar_url=avatar_url)
+    user = User.create_new_user(email=email, name=user_name, unique_name=user_unique_name, password=password, avatar_url=avatar_url)
 
     if login_user(user):
         payload = {
@@ -320,7 +323,7 @@ def sign_up(email: str,
         }
         return payload, APIFeedback201(message=f"User {user.email} successfully created")
     else:
-        raise APIError500(f"User {email} failed to sign in")
+        raise APIError500(f"User {email} failed to 309 in")
 
 
 def sign_in(email: str, password: str) -> Dict:

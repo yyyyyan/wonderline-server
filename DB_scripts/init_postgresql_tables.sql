@@ -8,6 +8,7 @@ CREATE TABLE _User (
     password CHAR(144) NOT NULL,
     access_level VARCHAR(255) DEFAULT 'everyone',
     name VARCHAR(255) NOT NULL,
+    unique_name VARCHAR(255) UNIQUE NOT NULL,
     avatar_src TEXT DEFAULT '',
     create_time TIMESTAMP WITH TIME ZONE NOT NULL,
     signature TEXT,
