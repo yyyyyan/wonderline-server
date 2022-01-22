@@ -84,7 +84,7 @@ def infer_country_from_location(longitude: float, latitude: float):
 
 
 def get_uuid() -> str:
-    return str(uuid.uuid1())
+    return str(uuid.uuid4())
 
 
 def encode_image(file_path):

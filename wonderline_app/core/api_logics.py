@@ -3,6 +3,7 @@ Implementations of users APIs' business logics.
 """
 import functools
 import logging
+import multiprocessing
 from typing import Dict, List, Optional, Callable, Union, Tuple
 
 from flask_login import login_user, current_user, logout_user
@@ -459,10 +460,16 @@ def upload_trip_photos(trip_id: str, original_photos: List[Dict]) -> Tuple[List[
     # 3. use the first photo as the cover photo for the trip if it's not set yet
     LOGGER.info(f"Uploading photo for trip {trip_id}")
     trip = get_trip(trip_id=trip_id)
-    for original_photo in original_photos:
-        size2url = upload_encoded_image(
-            image=original_photo['data'],
-            sizes=[ImageSize.ORIGINAL, ImageSize.MEDIUM, ImageSize.SMALL])
+
+    # use multiprocessing to handle image preprocessing
+    with multiprocessing.Pool(multiprocessing.cpu_count(), maxtasksperchild=5) as process_pool:
+        func = functools.partial(upload_encoded_image, sizes=[ImageSize.ORIGINAL, ImageSize.MEDIUM, ImageSize.SMALL])
+        size2urls = process_pool.map(func, [original_photo['data'] for original_photo in original_photos])
+        process_pool.close()
+        process_pool.join()
+
+    for i, original_photo in enumerate(original_photos):
+        size2url = size2urls[i]
         location = original_photo.get("location",
                                       construct_location(longitude=original_photo['longitude'],
                                                          longitude_ref=original_photo['longitudeRef'],

@@ -2,7 +2,6 @@ import base64
 import datetime
 import logging
 import os
-import uuid
 from enum import Enum
 from typing import Dict, Union, List
 
@@ -11,6 +10,7 @@ from PIL import Image
 
 from wonderline_app.db.minio.base import put_object_in_minio_and_return_url, object_exists_in_minio, \
     remove_object_from_minio
+from wonderline_app.utils import get_uuid
 
 LOGGER = logging.getLogger(__name__)
 DEFAULT_AVATAR_URL = "http://localhost/photos/default_avatar.png"
@@ -70,7 +70,7 @@ class ImageUploader:
             raise ImageTypeNotRecognized(f"Failed to recognize the image type for image file: {self.image_filename}")
 
     def _generate_unique_image_filename(self) -> str:
-        return str(uuid.uuid1()) + '.' + self.image_type
+        return get_uuid() + '.' + self.image_type
 
     def _save_img_in_tmp_folder_and_return_path(self, image: Union[Image.Image, ImageStorage],
                                                 image_ratio: ImageSize = ImageSize.ORIGINAL) -> str:
