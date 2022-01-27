@@ -149,14 +149,12 @@ class UserSignup(Resource):
     @users_namespace.marshal_with(user_sign_up_res)
     def post(self):
         email = request.json["email"]
-        user_name = request.json["userName"]
-        user_unique_name = request.json["userUniqueName"]
+        user_unique_name = request.json["uniqueName"]
         password = request.json["password"]
         photo_data = request.json.get('photoData', None)
         return handle_request(
             func=sign_up,
             email=email,
-            user_name=user_name,
             user_unique_name=user_unique_name,
             password=password,
             photo_data=photo_data

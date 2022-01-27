@@ -12,6 +12,7 @@ HOST = "http://localhost:80"
 
 class ApiTEST(unittest.TestCase):
     maxDiff = None
+
     def setUp(self) -> None:
         pass
 
@@ -110,7 +111,7 @@ class ApiTEST(unittest.TestCase):
                 "reducedUser": {
                     "id": "user_001",
                     "accessLevel": "everyone",
-                    "name": "Jon Snow",
+                    "nickName": "Jon Snow",
                     "uniqueName": "jon_snow",
                     "avatarSrc": "avatar.png"
                 },
@@ -123,14 +124,14 @@ class ApiTEST(unittest.TestCase):
                     {
                         "id": "user_007",
                         "accessLevel": "everyone",
-                        "name": "Night King",
+                        "nickName": "Night King",
                         "uniqueName": "night_king",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_006",
                         "accessLevel": "everyone",
-                        "name": "Cersei Lannister",
+                        "nickName": "Cersei Lannister",
                         "uniqueName": "cersei_lannister",
                         "avatarSrc": "avatar.png"
                     }
@@ -158,7 +159,7 @@ class ApiTEST(unittest.TestCase):
                 "reducedUser": {
                     "id": "user_001",
                     "accessLevel": "everyone",
-                    "name": "Jon Snow",
+                    "nickName": "Jon Snow",
                     "uniqueName": "jon_snow",
                     "avatarSrc": "avatar.png"
                 },
@@ -171,42 +172,42 @@ class ApiTEST(unittest.TestCase):
                     {
                         "id": "user_007",
                         "accessLevel": "everyone",
-                        "name": "Night King",
+                        "nickName": "Night King",
                         "uniqueName": "night_king",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_006",
                         "accessLevel": "everyone",
-                        "name": "Cersei Lannister",
+                        "nickName": "Cersei Lannister",
                         "uniqueName": "cersei_lannister",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_005",
                         "accessLevel": "everyone",
-                        "name": "Samwell Tarly",
+                        "nickName": "Samwell Tarly",
                         "uniqueName": "samwell_tarly",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_004",
                         "accessLevel": "everyone",
-                        "name": "Blue Dragon",
+                        "nickName": "Blue Dragon",
                         "uniqueName": "blue_dragon",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_003",
                         "accessLevel": "everyone",
-                        "name": "Red Dragon",
+                        "nickName": "Red Dragon",
                         "uniqueName": "red_dragon",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_002",
                         "accessLevel": "everyone",
-                        "name": "Daenerys Targaryen",
+                        "nickName": "Daenerys Targaryen",
                         "uniqueName": "daenerys_targaryen",
                         "avatarSrc": "avatar.png"
                     }
@@ -307,7 +308,7 @@ class ApiTEST(unittest.TestCase):
                 "reducedUser": {
                     "id": "user_002",
                     "accessLevel": "everyone",
-                    "name": "Daenerys Targaryen",
+                    "nickName": "Daenerys Targaryen",
                     "uniqueName": "daenerys_targaryen",
                     "avatarSrc": "avatar.png"
                 },
@@ -340,8 +341,10 @@ class ApiTEST(unittest.TestCase):
             })
 
         expected_res = {'payload': [
-            {'id': 'user_006', 'accessLevel': 'everyone', 'name': 'Cersei Lannister', 'uniqueName': 'cersei_lannister', 'avatarSrc': 'avatar.png'},
-            {'id': 'user_005', 'accessLevel': 'everyone', 'name': 'Samwell Tarly', "uniqueName": "samwell_tarly", 'avatarSrc': 'avatar.png'}],
+            {'id': 'user_006', 'accessLevel': 'everyone', 'nickName': 'Cersei Lannister',
+             'uniqueName': 'cersei_lannister', 'avatarSrc': 'avatar.png'},
+            {'id': 'user_005', 'accessLevel': 'everyone', 'nickName': 'Samwell Tarly', "uniqueName": "samwell_tarly",
+             'avatarSrc': 'avatar.png'}],
             'feedbacks': [], 'errors': [], 'timestamp': 1598128569991}
         self._assert_response(
             expected_code=200,
@@ -367,19 +370,49 @@ class ApiTEST(unittest.TestCase):
                 'name': 'The Winds of Winter',
                 'description': 'Winter is the time when things die, and cold and ice and darkness fill the world, so this is not going to be the happy feel-good that people may be hoping for. Things get worse before they get better, so things are getting worse for a lot of people.',
                 'status': 'confirmed',
-                'users': [{
-                    'id': 'user_004', 'accessLevel': 'everyone', 'name': 'Blue Dragon', "uniqueName": "blue_dragon",
-                    'avatarSrc': 'avatar.png'},
-                    {'id': 'user_002', 'accessLevel': 'everyone',
-                     'name': 'Daenerys Targaryen', 'uniqueName': 'daenerys_targaryen', 'avatarSrc': 'avatar.png'},
-                    {'id': 'user_001', 'accessLevel': 'everyone', 'name': 'Jon Snow', 'uniqueName': 'jon_snow',
-                     'avatarSrc': 'avatar.png'},
-                    {'id': 'user_007', 'accessLevel': 'everyone', 'name': 'Night King', 'uniqueName': 'night_king',
-                     'avatarSrc': 'avatar.png'},
-                    {'id': 'user_003', 'accessLevel': 'everyone', 'name': 'Red Dragon', 'uniqueName': 'red_dragon',
-                     'avatarSrc': 'avatar.png'},
-                    {'id': 'user_005', 'accessLevel': 'everyone', 'name': 'Samwell Tarly', "uniqueName": "samwell_tarly",
-                     'avatarSrc': 'avatar.png'}],
+                'users': [
+                    {
+                        'id': 'user_004',
+                        'accessLevel': 'everyone',
+                        'nickName': 'Blue Dragon',
+                        "uniqueName": "blue_dragon",
+                        'avatarSrc': 'avatar.png'
+                    },
+                    {
+                        'id': 'user_002',
+                        'accessLevel': 'everyone',
+                        'nickName': 'Daenerys Targaryen',
+                        'uniqueName': 'daenerys_targaryen',
+                        'avatarSrc': 'avatar.png'
+                    },
+                    {
+                        'id': 'user_001',
+                        'accessLevel': 'everyone',
+                        'nickName': 'Jon Snow',
+                        'uniqueName': 'jon_snow',
+                        'avatarSrc': 'avatar.png'
+                    },
+                    {
+                        'id': 'user_007',
+                        'accessLevel': 'everyone',
+                        'nickName': 'Night King',
+                        'uniqueName': 'night_king',
+                        'avatarSrc': 'avatar.png'
+                    },
+                    {
+                        'id': 'user_003',
+                        'accessLevel': 'everyone',
+                        'nickName': 'Red Dragon',
+                        'uniqueName': 'red_dragon',
+                        'avatarSrc': 'avatar.png'
+                    },
+                    {
+                        'id': 'user_005',
+                        'accessLevel': 'everyone',
+                        'nickName': 'Samwell Tarly',
+                        "uniqueName": "samwell_tarly",
+                        'avatarSrc': 'avatar.png'
+                    }],
                 'createTime': 1596142528,
                 'beginTime': 1596142628,
                 'endTime': 1596143628,
@@ -387,8 +420,13 @@ class ApiTEST(unittest.TestCase):
                 'coverPhoto': {
                     'id': 'photo_01_2', 'accessLevel': 'everyone', 'tripId': 'trip_01',
                     'status': 'confirmed',
-                    'user': {'id': 'user_001', 'accessLevel': 'everyone',
-                             'name': 'Jon Snow', 'uniqueName': 'jon_snow', 'avatarSrc': 'avatar.png'},
+                    'user': {
+                        'id': 'user_001',
+                        'accessLevel': 'everyone',
+                        'nickName': 'Jon Snow',
+                        'uniqueName': 'jon_snow',
+                        'avatarSrc': 'avatar.png'
+                    },
                     'location': 'Westeros', 'country': 'Westeros',
                     'createTime': 1596142638, 'uploadTime': 1596142638,
                     'width': 374, 'height': 280, 'lqSrc': 'photo_2.jpg',
@@ -446,7 +484,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_002",
                                     "accessLevel": "everyone",
-                                    "name": "Daenerys Targaryen",
+                                    "nickName": "Daenerys Targaryen",
                                     "uniqueName": "daenerys_targaryen",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -478,7 +516,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_001",
                                     "accessLevel": "everyone",
-                                    "name": "Jon Snow",
+                                    "nickName": "Jon Snow",
                                     "uniqueName": "jon_snow",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -503,7 +541,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_001",
                                     "accessLevel": "everyone",
-                                    "name": "Jon Snow",
+                                    "nickName": "Jon Snow",
                                     "uniqueName": "jon_snow",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -555,7 +593,7 @@ class ApiTEST(unittest.TestCase):
                         "user": {
                             "id": "user_001",
                             "accessLevel": "everyone",
-                            "name": "Jon Snow",
+                            "nickName": "Jon Snow",
                             "uniqueName": "jon_snow",
                             "avatarSrc": "avatar.png"
                         },
@@ -581,7 +619,7 @@ class ApiTEST(unittest.TestCase):
                         "user": {
                             "id": "user_001",
                             "accessLevel": "everyone",
-                            "name": "Jon Snow",
+                            "nickName": "Jon Snow",
                             "uniqueName": "jon_snow",
                             "avatarSrc": "avatar.png"
                         },
@@ -629,42 +667,42 @@ class ApiTEST(unittest.TestCase):
                         {
                             "id": "user_001",
                             "accessLevel": "everyone",
-                            "name": "Jon Snow",
+                            "nickName": "Jon Snow",
                             "uniqueName": "jon_snow",
                             "avatarSrc": "avatar.png"
                         },
                         {
                             "id": "user_002",
                             "accessLevel": "everyone",
-                            "name": "Daenerys Targaryen",
+                            "nickName": "Daenerys Targaryen",
                             "uniqueName": "daenerys_targaryen",
                             "avatarSrc": "avatar.png"
                         },
                         {
                             "id": "user_003",
                             "accessLevel": "everyone",
-                            "name": "Red Dragon",
+                            "nickName": "Red Dragon",
                             "uniqueName": "red_dragon",
                             "avatarSrc": "avatar.png"
                         },
                         {
                             "id": "user_004",
                             "accessLevel": "everyone",
-                            "name": "Blue Dragon",
+                            "nickName": "Blue Dragon",
                             "uniqueName": "blue_dragon",
                             "avatarSrc": "avatar.png"
                         },
                         {
                             "id": "user_005",
                             "accessLevel": "everyone",
-                            "name": "Samwell Tarly",
+                            "nickName": "Samwell Tarly",
                             "uniqueName": "samwell_tarly",
                             "avatarSrc": "avatar.png"
                         },
                         {
                             "id": "user_007",
                             "accessLevel": "everyone",
-                            "name": "Night King",
+                            "nickName": "Night King",
                             "uniqueName": "night_king",
                             "avatarSrc": "avatar.png"
                         }
@@ -681,7 +719,7 @@ class ApiTEST(unittest.TestCase):
                         "user": {
                             "id": "user_001",
                             "accessLevel": "everyone",
-                            "name": "Jon Snow",
+                            "nickName": "Jon Snow",
                             "uniqueName": "jon_snow",
                             "avatarSrc": "avatar.png"
                         },
@@ -725,28 +763,28 @@ class ApiTEST(unittest.TestCase):
                 {
                     "id": "user_003",
                     "accessLevel": "everyone",
-                    "name": "Red Dragon",
+                    "nickName": "Red Dragon",
                     "uniqueName": "red_dragon",
                     "avatarSrc": "avatar.png"
                 },
                 {
                     "id": "user_004",
                     "accessLevel": "everyone",
-                    "name": "Blue Dragon",
+                    "nickName": "Blue Dragon",
                     "uniqueName": "blue_dragon",
                     "avatarSrc": "avatar.png"
                 },
                 {
                     "id": "user_005",
                     "accessLevel": "everyone",
-                    "name": "Samwell Tarly",
+                    "nickName": "Samwell Tarly",
                     "uniqueName": "samwell_tarly",
                     "avatarSrc": "avatar.png"
                 },
                 {
                     "id": "user_007",
                     "accessLevel": "everyone",
-                    "name": "Night King",
+                    "nickName": "Night King",
                     "uniqueName": "night_king",
                     "avatarSrc": "avatar.png"
                 }
@@ -782,7 +820,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_002",
                         "accessLevel": "everyone",
-                        "name": "Daenerys Targaryen",
+                        "nickName": "Daenerys Targaryen",
                         "uniqueName": "daenerys_targaryen",
                         "avatarSrc": "avatar.png"
                     },
@@ -804,7 +842,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
@@ -850,7 +888,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
@@ -869,14 +907,14 @@ class ApiTEST(unittest.TestCase):
                     {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_002",
                         "accessLevel": "everyone",
-                        "name": "Daenerys Targaryen",
+                        "nickName": "Daenerys Targaryen",
                         "uniqueName": "daenerys_targaryen",
                         "avatarSrc": "avatar.png"
                     }
@@ -885,7 +923,7 @@ class ApiTEST(unittest.TestCase):
                     {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     }
@@ -900,7 +938,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_003",
                                     "accessLevel": "everyone",
-                                    "name": "Red Dragon",
+                                    "nickName": "Red Dragon",
                                     "uniqueName": "red_dragon",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -913,7 +951,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_004",
                                     "accessLevel": "everyone",
-                                    "name": "Blue Dragon",
+                                    "nickName": "Blue Dragon",
                                     "uniqueName": "blue_dragon",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -926,7 +964,7 @@ class ApiTEST(unittest.TestCase):
                         "user": {
                             "id": "user_002",
                             "accessLevel": "everyone",
-                            "name": "Daenerys Targaryen",
+                            "nickName": "Daenerys Targaryen",
                             "uniqueName": "daenerys_targaryen",
                             "avatarSrc": "avatar.png"
                         },
@@ -942,7 +980,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_002",
                                     "accessLevel": "everyone",
-                                    "name": "Daenerys Targaryen",
+                                    "nickName": "Daenerys Targaryen",
                                     "uniqueName": "daenerys_targaryen",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -955,7 +993,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_006",
                                     "accessLevel": "everyone",
-                                    "name": "Cersei Lannister",
+                                    "nickName": "Cersei Lannister",
                                     "uniqueName": "cersei_lannister",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -968,7 +1006,7 @@ class ApiTEST(unittest.TestCase):
                         "user": {
                             "id": "user_001",
                             "accessLevel": "everyone",
-                            "name": "Jon Snow",
+                            "nickName": "Jon Snow",
                             "uniqueName": "jon_snow",
                             "avatarSrc": "avatar.png"
                         },
@@ -1006,7 +1044,7 @@ class ApiTEST(unittest.TestCase):
                             "user": {
                                 "id": "user_003",
                                 "accessLevel": "everyone",
-                                "name": "Red Dragon",
+                                "nickName": "Red Dragon",
                                 "uniqueName": "red_dragon",
                                 "avatarSrc": "avatar.png"
                             },
@@ -1019,7 +1057,7 @@ class ApiTEST(unittest.TestCase):
                             "user": {
                                 "id": "user_004",
                                 "accessLevel": "everyone",
-                                "name": "Blue Dragon",
+                                "nickName": "Blue Dragon",
                                 "uniqueName": "blue_dragon",
                                 "avatarSrc": "avatar.png"
                             },
@@ -1032,7 +1070,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_002",
                         "accessLevel": "everyone",
-                        "name": "Daenerys Targaryen",
+                        "nickName": "Daenerys Targaryen",
                         "uniqueName": "daenerys_targaryen",
                         "avatarSrc": "avatar.png"
                     },
@@ -1048,7 +1086,7 @@ class ApiTEST(unittest.TestCase):
                             "user": {
                                 "id": "user_002",
                                 "accessLevel": "everyone",
-                                "name": "Daenerys Targaryen",
+                                "nickName": "Daenerys Targaryen",
                                 "uniqueName": "daenerys_targaryen",
                                 "avatarSrc": "avatar.png"
                             },
@@ -1061,7 +1099,7 @@ class ApiTEST(unittest.TestCase):
                             "user": {
                                 "id": "user_006",
                                 "accessLevel": "everyone",
-                                "name": "Cersei Lannister",
+                                "nickName": "Cersei Lannister",
                                 "uniqueName": "cersei_lannister",
                                 "avatarSrc": "avatar.png"
                             },
@@ -1074,7 +1112,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
@@ -1109,7 +1147,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_004",
                         "accessLevel": "everyone",
-                        "name": "Blue Dragon",
+                        "nickName": "Blue Dragon",
                         "uniqueName": "blue_dragon",
                         "avatarSrc": "avatar.png"
                     },
@@ -1122,7 +1160,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_005",
                         "accessLevel": "everyone",
-                        "name": "Samwell Tarly",
+                        "nickName": "Samwell Tarly",
                         "uniqueName": "samwell_tarly",
                         "avatarSrc": "avatar.png"
                     },
@@ -1146,10 +1184,10 @@ class ApiTEST(unittest.TestCase):
         try:
             res = APP.test_client().post(
                 "http://localhost:80/users/signUp",
-                json=dict(email="test@gmail.com", password="password", userName="test", userUniqueName="test"))
+                json=dict(email="test@gmail.com", password="password", uniqueName="test"))
             payload = res.json['payload']
             assert 'userToken' in payload and isinstance(payload['userToken'], str)
-            assert payload['user']['reducedUser']['name'] == 'test'
+            assert payload['user']['reducedUser']['nickName'] is None
             assert payload['user']['reducedUser']['uniqueName'] == 'test'
             assert payload['user']['reducedUser']['accessLevel'] == 'everyone'
             assert payload['user']['reducedUser'][
@@ -1170,7 +1208,7 @@ class ApiTEST(unittest.TestCase):
             json=dict(email="jon@gmail.com", password="password"))
         payload = res.json['payload']
         assert 'userToken' in payload and isinstance(payload['userToken'], str)
-        assert payload['user']['reducedUser']['name'] == 'Jon Snow'
+        assert payload['user']['reducedUser']['nickName'] == 'Jon Snow'
         assert payload['user']['reducedUser']['uniqueName'] == 'jon_snow'
         assert payload['user']['isFollowedByLoginUser'] is False
         assert res.status_code == 200
@@ -1223,14 +1261,14 @@ class ApiTEST(unittest.TestCase):
                         {
                             "id": "user_001",
                             "accessLevel": "everyone",
-                            "name": "Jon Snow",
+                            "nickName": "Jon Snow",
                             "uniqueName": "jon_snow",
                             "avatarSrc": "avatar.png"
                         },
                         {
                             "id": "user_002",
                             "accessLevel": "everyone",
-                            "name": "Daenerys Targaryen",
+                            "nickName": "Daenerys Targaryen",
                             "uniqueName": "daenerys_targaryen",
                             "avatarSrc": "avatar.png"
                         }
@@ -1298,14 +1336,14 @@ class ApiTEST(unittest.TestCase):
                         {
                             "id": "user_001",
                             "accessLevel": "everyone",
-                            "name": "Jon Snow",
+                            "nickName": "Jon Snow",
                             "uniqueName": "jon_snow",
                             "avatarSrc": "avatar.png"
                         },
                         {
                             "id": "user_003",
                             "accessLevel": "everyone",
-                            "name": "Red Dragon",
+                            "nickName": "Red Dragon",
                             "uniqueName": "red_dragon",
                             "avatarSrc": "avatar.png"
                         }
@@ -1352,7 +1390,7 @@ class ApiTEST(unittest.TestCase):
                 {
                     "id": "user_001",
                     "accessLevel": "everyone",
-                    "name": "Jon Snow",
+                    "nickName": "Jon Snow",
                     "uniqueName": "jon_snow",
                     "avatarSrc": "avatar.png"
                 }
@@ -1406,7 +1444,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
@@ -1481,7 +1519,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
@@ -1542,7 +1580,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
@@ -1561,42 +1599,42 @@ class ApiTEST(unittest.TestCase):
                     {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_002",
                         "accessLevel": "everyone",
-                        "name": "Daenerys Targaryen",
+                        "nickName": "Daenerys Targaryen",
                         "uniqueName": "daenerys_targaryen",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_003",
                         "accessLevel": "everyone",
-                        "name": "Red Dragon",
+                        "nickName": "Red Dragon",
                         "uniqueName": "red_dragon",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_004",
                         "accessLevel": "everyone",
-                        "name": "Blue Dragon",
+                        "nickName": "Blue Dragon",
                         "uniqueName": "blue_dragon",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_005",
                         "accessLevel": "everyone",
-                        "name": "Samwell Tarly",
+                        "nickName": "Samwell Tarly",
                         "uniqueName": "samwell_tarly",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_006",
                         "accessLevel": "everyone",
-                        "name": "Cersei Lannister",
+                        "nickName": "Cersei Lannister",
                         "uniqueName": "cersei_lannister",
                         "avatarSrc": "avatar.png"
                     }
@@ -1605,14 +1643,14 @@ class ApiTEST(unittest.TestCase):
                     {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
                     {
                         "id": "user_002",
                         "accessLevel": "everyone",
-                        "name": "Daenerys Targaryen",
+                        "nickName": "Daenerys Targaryen",
                         "uniqueName": "daenerys_targaryen",
                         "avatarSrc": "avatar.png"
                     }
@@ -1627,7 +1665,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_003",
                                     "accessLevel": "everyone",
-                                    "name": "Red Dragon",
+                                    "nickName": "Red Dragon",
                                     "uniqueName": "red_dragon",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -1640,7 +1678,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_004",
                                     "accessLevel": "everyone",
-                                    "name": "Blue Dragon",
+                                    "nickName": "Blue Dragon",
                                     "uniqueName": "blue_dragon",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -1653,7 +1691,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_005",
                                     "accessLevel": "everyone",
-                                    "name": "Samwell Tarly",
+                                    "nickName": "Samwell Tarly",
                                     "uniqueName": "samwell_tarly",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -1666,7 +1704,7 @@ class ApiTEST(unittest.TestCase):
                         "user": {
                             "id": "user_002",
                             "accessLevel": "everyone",
-                            "name": "Daenerys Targaryen",
+                            "nickName": "Daenerys Targaryen",
                             "uniqueName": "daenerys_targaryen",
                             "avatarSrc": "avatar.png"
                         },
@@ -1682,7 +1720,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_002",
                                     "accessLevel": "everyone",
-                                    "name": "Daenerys Targaryen",
+                                    "nickName": "Daenerys Targaryen",
                                     "uniqueName": "daenerys_targaryen",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -1695,7 +1733,7 @@ class ApiTEST(unittest.TestCase):
                                 "user": {
                                     "id": "user_006",
                                     "accessLevel": "everyone",
-                                    "name": "Cersei Lannister",
+                                    "nickName": "Cersei Lannister",
                                     "uniqueName": "cersei_lannister",
                                     "avatarSrc": "avatar.png"
                                 },
@@ -1708,7 +1746,7 @@ class ApiTEST(unittest.TestCase):
                         "user": {
                             "id": "user_001",
                             "accessLevel": "everyone",
-                            "name": "Jon Snow",
+                            "nickName": "Jon Snow",
                             "uniqueName": "jon_snow",
                             "avatarSrc": "avatar.png"
                         },
@@ -1821,7 +1859,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
@@ -1843,7 +1881,7 @@ class ApiTEST(unittest.TestCase):
                     "user": {
                         "id": "user_001",
                         "accessLevel": "everyone",
-                        "name": "Jon Snow",
+                        "nickName": "Jon Snow",
                         "uniqueName": "jon_snow",
                         "avatarSrc": "avatar.png"
                     },
@@ -1885,6 +1923,7 @@ class ApiTEST(unittest.TestCase):
                 "accessLevel": "everyone"
             }
         )
+
     def test_search_users_in_trip(self):
         # create a new trip
         new_trip = create_and_return_new_trip(owner_id='user_001', trip_name='test trip',
@@ -1921,14 +1960,14 @@ class ApiTEST(unittest.TestCase):
                 {
                     "id": "user_001",
                     "accessLevel": "everyone",
-                    "name": "Jon Snow",
+                    "nickName": "Jon Snow",
                     "uniqueName": "jon_snow",
                     "avatarSrc": "avatar.png"
                 },
                 {
                     "id": "user_003",
                     "accessLevel": "everyone",
-                    "name": "Red Dragon",
+                    "nickName": "Red Dragon",
                     "uniqueName": "red_dragon",
                     "avatarSrc": "avatar.png"
                 },

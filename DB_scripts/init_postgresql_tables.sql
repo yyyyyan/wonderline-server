@@ -7,7 +7,7 @@ CREATE TABLE _User (
     email VARCHAR (254) UNIQUE NOT NULL,
     password CHAR(144) NOT NULL,
     access_level VARCHAR(255) DEFAULT 'everyone',
-    name VARCHAR(255) NOT NULL,
+    nick_name VARCHAR(255),
     unique_name VARCHAR(255) UNIQUE NOT NULL,
     avatar_src TEXT DEFAULT '',
     create_time TIMESTAMP WITH TIME ZONE NOT NULL,

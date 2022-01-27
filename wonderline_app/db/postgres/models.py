@@ -44,14 +44,14 @@ class User(Base, UserMixin):
     """Sqlalchemy User model"""
     __tablename__ = '_user'
 
-    __reduced_keys = ['id', 'name', 'accessLevel', 'avatarSrc', 'uniqueName']
+    __reduced_keys = ['id', 'nickName', 'accessLevel', 'avatarSrc', 'uniqueName']
 
     query = db_session.query_property()
 
     id = Column(TEXT, primary_key=True)
     email = Column(VARCHAR(254), nullable=False)
     password = Column(CHAR(), nullable=False, unique=True)
-    name = Column(VARCHAR(255), nullable=False)
+    nickName = Column("nick_name", VARCHAR(255))
     uniqueName = Column("unique_name", VARCHAR(255), nullable=False)
     createTime = Column("create_time", TIMESTAMP, nullable=False)
     accessLevel = Column("access_level", VARCHAR(255), default='everyone')
@@ -92,20 +92,21 @@ class User(Base, UserMixin):
         return cls.query.filter_by(uniqueName=unique_name).first() is not None
 
     @classmethod
-    def create_new_user(cls, email: str, name: str, unique_name: str, password: str, avatar_url: str) -> User:
+    def create_new_user(cls, email: str, unique_name: str, password: str, avatar_url: str, name: str = None) -> User:
         user_id = str(uuid.uuid1())
         user = User(
             id=user_id,
             email=email,
             password=generate_password_hash(password, method='sha512'),
-            name=name,
+            nickName=name,
             uniqueName=unique_name,
             createTime=datetime.now(),
             avatarSrc=avatar_url
         )
         db_session.add(user)
         db_session.commit()
-        LOGGER.info(f"Succeeded to create a new user email:{email}, name: {name}, id: {user_id}")
+        LOGGER.info(f"Succeeded to create a new user email:{email}, unique_name: {unique_name}, id: {user_id}, "
+                    f"name: {name}")
         return user
 
     @classmethod
@@ -215,9 +216,9 @@ class User(Base, UserMixin):
                      sort_type: str = SearchSortType.BEST_MATCH.value) -> List[Dict]:
         if name_query is None or not len(name_query):
             return []
-        matched_users = User.query.filter(User.name.ilike(f"%{name_query}%")).all()
+        matched_users = User.query.filter(User.nickName.ilike(f"%{name_query}%")).all()
         if sort_type == SearchSortType.BEST_MATCH.value:
-            matched_users.sort(key=lambda x: edit_distance(word1=name_query, word2=x.name))
+            matched_users.sort(key=lambda x: edit_distance(word1=name_query, word2=x.nickName))
         else:
             raise ValueError("Unknown sort_type for searching users")
         if matched_users:

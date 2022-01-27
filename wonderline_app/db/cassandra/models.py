@@ -476,7 +476,7 @@ class TripsByUser(Model, TripUtils):
             access_level=access_level,
             start_index=start_index)  # trips: List[TripsByUser]
         for trip in trips:
-            trip.users = User.get_users_by_ids(user_ids=trip.users, sort_by='name', sort_desc=False)
+            trip.users = User.get_users_by_ids(user_ids=trip.users, sort_by='nickName', sort_desc=False)
             try:
                 trip.cover_photo = Photo.get_photo_by_photo_id(photo_id=str(trip.cover_photo))
             except PhotoNotFound:

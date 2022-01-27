@@ -303,7 +303,6 @@ def get_replies_by_comment(trip_id: str, photo_id: str, comment_id: str, sort_ty
 
 
 def sign_up(email: str,
-            user_name: str,
             user_unique_name: str,
             password: str,
             photo_data: str) -> [Dict, Feedback]:
@@ -315,7 +314,7 @@ def sign_up(email: str,
         avatar_url = upload_encoded_image(image=photo_data, sizes=[ImageSize.AVATAR])[ImageSize.AVATAR.name]
     else:
         avatar_url = DEFAULT_AVATAR_URL
-    user = User.create_new_user(email=email, name=user_name, unique_name=user_unique_name, password=password, avatar_url=avatar_url)
+    user = User.create_new_user(email=email, unique_name=user_unique_name, password=password, avatar_url=avatar_url)
 
     if login_user(user):
         payload = {
