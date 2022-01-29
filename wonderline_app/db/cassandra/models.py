@@ -236,7 +236,7 @@ class CommentsByPhoto(Model):
                                      start_index: int = 0) -> List[Reply]:
         sort_by = SORTING_MAPPING[sort_by]
         self.replies = list(self.replies)
-        self.replies.sort(key=lambda x: getattr(x, sort_by))
+        self.replies.sort(key=lambda x: getattr(x, sort_by), reverse=True)
         return self.replies[start_index:start_index + nb]
 
     def get_replies_objects(self, sort_by: str = "creteTime", nb: int = 6, start_index: int = 0) -> List[Reply]:
@@ -257,6 +257,10 @@ class CommentsByPhoto(Model):
                     nb=nb,
                     start_index=0
                 )
+
+            # convert to list so that it can be sorted
+            comments = list(comments)
+            comments.sort(key=lambda x: getattr(x, "liked_nb"), reverse=True)
         return comments
 
     @classmethod

@@ -934,17 +934,17 @@ class ApiTEST(unittest.TestCase):
                         "replyNb": 3,
                         "replies": [
                             {
-                                "id": "reply_01",
+                                "id": "reply_03",
                                 "user": {
-                                    "id": "user_003",
+                                    "id": "user_005",
                                     "accessLevel": "everyone",
-                                    "nickName": "Red Dragon",
-                                    "uniqueName": "red_dragon",
+                                    "nickName": "Samwell Tarly",
+                                    "uniqueName": "samwell_tarly",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142629,
-                                "content": "what?",
-                                "likedNb": 3
+                                "createTime": 1596146639,
+                                "content": "yes",
+                                "likedNb": 1
                             },
                             {
                                 "id": "reply_02",
@@ -976,19 +976,6 @@ class ApiTEST(unittest.TestCase):
                         "replyNb": 2,
                         "replies": [
                             {
-                                "id": "reply_01",
-                                "user": {
-                                    "id": "user_002",
-                                    "accessLevel": "everyone",
-                                    "nickName": "Daenerys Targaryen",
-                                    "uniqueName": "daenerys_targaryen",
-                                    "avatarSrc": "avatar.png"
-                                },
-                                "createTime": 1596142629,
-                                "content": "what?",
-                                "likedNb": 3
-                            },
-                            {
                                 "id": "reply_02",
                                 "user": {
                                     "id": "user_006",
@@ -1000,6 +987,19 @@ class ApiTEST(unittest.TestCase):
                                 "createTime": 1596142639,
                                 "content": "good",
                                 "likedNb": 4
+                            },
+                            {
+                                "id": "reply_01",
+                                "user": {
+                                    "id": "user_002",
+                                    "accessLevel": "everyone",
+                                    "nickName": "Daenerys Targaryen",
+                                    "uniqueName": "daenerys_targaryen",
+                                    "avatarSrc": "avatar.png"
+                                },
+                                "createTime": 1596142629,
+                                "content": "what?",
+                                "likedNb": 3
                             }
                         ],
                         "id": "comment_01",
@@ -1012,7 +1012,7 @@ class ApiTEST(unittest.TestCase):
                         },
                         "createTime": 1596142629,
                         "content": "hi",
-                        "likedNb": 7
+                        "likedNb": 6
                     }
                 ],
             },
@@ -1040,32 +1040,32 @@ class ApiTEST(unittest.TestCase):
                     "replyNb": 3,
                     "replies": [
                         {
-                            "id": "reply_01",
-                            "user": {
-                                "id": "user_003",
-                                "accessLevel": "everyone",
-                                "nickName": "Red Dragon",
-                                "uniqueName": "red_dragon",
-                                "avatarSrc": "avatar.png"
-                            },
-                            "createTime": 1596142629,
-                            "content": "what?",
-                            "likedNb": 3
+                          "id": "reply_03",
+                          "user": {
+                            "id": "user_005",
+                            "accessLevel": "everyone",
+                            "nickName": "Samwell Tarly",
+                            "uniqueName": "samwell_tarly",
+                            "avatarSrc": "avatar.png"
+                          },
+                          "createTime": 1596146639,
+                          "content": "yes",
+                          "likedNb": 1
                         },
                         {
-                            "id": "reply_02",
-                            "user": {
-                                "id": "user_004",
-                                "accessLevel": "everyone",
-                                "nickName": "Blue Dragon",
-                                "uniqueName": "blue_dragon",
-                                "avatarSrc": "avatar.png"
-                            },
-                            "createTime": 1596142639,
-                            "content": "good",
-                            "likedNb": 3
+                          "id": "reply_02",
+                          "user": {
+                            "id": "user_004",
+                            "accessLevel": "everyone",
+                            "nickName": "Blue Dragon",
+                            "uniqueName": "blue_dragon",
+                            "avatarSrc": "avatar.png"
+                          },
+                          "createTime": 1596142639,
+                          "content": "good",
+                          "likedNb": 3
                         }
-                    ],
+                      ],
                     "id": "comment_02",
                     "user": {
                         "id": "user_002",
@@ -1082,19 +1082,6 @@ class ApiTEST(unittest.TestCase):
                     "replyNb": 2,
                     "replies": [
                         {
-                            "id": "reply_01",
-                            "user": {
-                                "id": "user_002",
-                                "accessLevel": "everyone",
-                                "nickName": "Daenerys Targaryen",
-                                "uniqueName": "daenerys_targaryen",
-                                "avatarSrc": "avatar.png"
-                            },
-                            "createTime": 1596142629,
-                            "content": "what?",
-                            "likedNb": 3
-                        },
-                        {
                             "id": "reply_02",
                             "user": {
                                 "id": "user_006",
@@ -1106,6 +1093,19 @@ class ApiTEST(unittest.TestCase):
                             "createTime": 1596142639,
                             "content": "good",
                             "likedNb": 4
+                        },
+                        {
+                            "id": "reply_01",
+                            "user": {
+                                "id": "user_002",
+                                "accessLevel": "everyone",
+                                "nickName": "Daenerys Targaryen",
+                                "uniqueName": "daenerys_targaryen",
+                                "avatarSrc": "avatar.png"
+                            },
+                            "createTime": 1596142629,
+                            "content": "what?",
+                            "likedNb": 3
                         }
                     ],
                     "id": "comment_01",
@@ -1118,7 +1118,7 @@ class ApiTEST(unittest.TestCase):
                     },
                     "createTime": 1596142629,
                     "content": "hi",
-                    "likedNb": 7
+                    "likedNb": 6
                 }
             ],
             "feedbacks": [],
@@ -1661,17 +1661,17 @@ class ApiTEST(unittest.TestCase):
                         "replyNb": 3,
                         "replies": [
                             {
-                                "id": "reply_01",
+                                "id": "reply_03",
                                 "user": {
-                                    "id": "user_003",
+                                    "id": "user_005",
                                     "accessLevel": "everyone",
-                                    "nickName": "Red Dragon",
-                                    "uniqueName": "red_dragon",
+                                    "nickName": "Samwell Tarly",
+                                    "uniqueName": "samwell_tarly",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596142629,
-                                "content": "what?",
-                                "likedNb": 3
+                                "createTime": 1596146639,
+                                "content": "yes",
+                                "likedNb": 1
                             },
                             {
                                 "id": "reply_02",
@@ -1687,17 +1687,17 @@ class ApiTEST(unittest.TestCase):
                                 "likedNb": 3
                             },
                             {
-                                "id": "reply_03",
+                                "id": "reply_01",
                                 "user": {
-                                    "id": "user_005",
+                                    "id": "user_003",
                                     "accessLevel": "everyone",
-                                    "nickName": "Samwell Tarly",
-                                    "uniqueName": "samwell_tarly",
+                                    "nickName": "Red Dragon",
+                                    "uniqueName": "red_dragon",
                                     "avatarSrc": "avatar.png"
                                 },
-                                "createTime": 1596146639,
-                                "content": "yes",
-                                "likedNb": 1
+                                "createTime": 1596142629,
+                                "content": "what?",
+                                "likedNb": 3
                             }
                         ],
                         "id": "comment_02",
@@ -1716,19 +1716,6 @@ class ApiTEST(unittest.TestCase):
                         "replyNb": 2,
                         "replies": [
                             {
-                                "id": "reply_01",
-                                "user": {
-                                    "id": "user_002",
-                                    "accessLevel": "everyone",
-                                    "nickName": "Daenerys Targaryen",
-                                    "uniqueName": "daenerys_targaryen",
-                                    "avatarSrc": "avatar.png"
-                                },
-                                "createTime": 1596142629,
-                                "content": "what?",
-                                "likedNb": 3
-                            },
-                            {
                                 "id": "reply_02",
                                 "user": {
                                     "id": "user_006",
@@ -1740,6 +1727,19 @@ class ApiTEST(unittest.TestCase):
                                 "createTime": 1596142639,
                                 "content": "good",
                                 "likedNb": 4
+                            },
+                            {
+                                "id": "reply_01",
+                                "user": {
+                                    "id": "user_002",
+                                    "accessLevel": "everyone",
+                                    "nickName": "Daenerys Targaryen",
+                                    "uniqueName": "daenerys_targaryen",
+                                    "avatarSrc": "avatar.png"
+                                },
+                                "createTime": 1596142629,
+                                "content": "what?",
+                                "likedNb": 3
                             }
                         ],
                         "id": "comment_01",
@@ -1752,7 +1752,7 @@ class ApiTEST(unittest.TestCase):
                         },
                         "createTime": 1596142629,
                         "content": "hi",
-                        "likedNb": 7
+                        "likedNb": 6
                     }
                 ]
             },

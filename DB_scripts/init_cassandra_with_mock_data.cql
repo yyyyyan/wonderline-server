@@ -1661,7 +1661,7 @@ INSERT INTO wonderline.comments_by_photo (
     'user_001',
     1596142629628,
     'hi',
-    7,
+    6,
     2,
     {
         {
@@ -1736,7 +1736,7 @@ INSERT INTO wonderline.comment (
     'user_001',
     1596142629628,
     'hi',
-    7,
+    6,
     2,
     {
         {

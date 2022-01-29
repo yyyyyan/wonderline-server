@@ -272,11 +272,15 @@ def get_comments_by_photo(trip_id: str, photo_id: str, replies_sort_type: str, r
     trip = get_trip(trip_id=trip_id)
     if trip:
         try:
-            return CommentsByPhoto.get_comments(
-                photo_id=photo_id,
-                sort_by=replies_sort_type,
-                nb=reply_nb)
-        except CommentNotFound as e:
+            Photo.get_photo_by_photo_id(photo_id=photo_id)
+            try:
+                return CommentsByPhoto.get_comments(
+                    photo_id=photo_id,
+                    sort_by=replies_sort_type,
+                    nb=reply_nb)
+            except CommentNotFound as e:
+                raise APIError404(message=str(e))
+        except PhotoNotFound as e:
             raise APIError404(message=str(e))
 
 
