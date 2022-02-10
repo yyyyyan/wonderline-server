@@ -5,12 +5,30 @@ from flask_restplus import fields
 from wonderline_app.api.namespaces import trips_namespace
 from wonderline_app.api.users.response_models.models import reduced_user_model
 
+
+comment_mention = trips_namespace.model("CommentMention", {
+    "uniqueName": fields.String(example="jon_snow"),
+    "userId": fields.String(example="user_001"),
+    "startIndex": fields.Integer(example="2"),
+    "endIndex": fields.Integer(example="6")  # not included
+})
+
+comment_hashtag = trips_namespace.model("CommentHashtag", {
+    "name": fields.String(example=""),
+    "startIndex": fields.Integer(example="7"),  # starts from the index after "#"
+    "endIndex": fields.Integer(example="8")  # not included
+})
+
+
 reply_model = trips_namespace.model("Reply", {
     "id": fields.String(example="reply_001"),
     "user": fields.Nested(reduced_user_model),
     "createTime": fields.Integer(example=1596134528628),
     "content": fields.String(example="Hello World"),
-    "likedNb": fields.Integer(example=3)
+    "likedNb": fields.Integer(example=3),
+    "mentions": fields.List(fields.Nested(comment_mention)),
+    "hashtags": fields.List(fields.Nested(comment_hashtag)),
+    "hasLiked": fields.Boolean(example=True)
 })
 
 comment_model = trips_namespace.inherit("Comment", reply_model, {

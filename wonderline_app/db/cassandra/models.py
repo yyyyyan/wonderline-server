@@ -4,73 +4,25 @@ Cassandra ORM.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Type, Optional
+from typing import List, Dict, Optional
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.columns import UserDefinedType
 from cassandra.cqlengine.models import Model
-from cassandra.cqlengine.query import DoesNotExist, LWTException
+from cassandra.cqlengine.query import DoesNotExist
 from cassandra.cqlengine.usertype import UserType
+from cassandra.cqlengine.query import LWTException
 
 from wonderline_app.api.common.enums import SortType, AccessLevel, TripStatus
 from wonderline_app.core.image_service import remove_image_by_url
+from wonderline_app.db.cassandra.utils import SORTING_MAPPING, get_filtered_models
 from wonderline_app.db.cassandra.exceptions import PhotoNotFound, TripNotFound, CommentNotFound
 from wonderline_app.db.postgres.exceptions import UserNotFound
 from wonderline_app.db.postgres.models import User
 from wonderline_app.utils import convert_date_to_timestamp_in_expected_unit, get_current_timestamp, get_uuid
 
 LOGGER = logging.getLogger(__name__)
-
-# mapping from camel case to snake case
-SORTING_MAPPING = {
-    SortType.CREATE_TIME.value: 'create_time'
-}
-
-
-def get_filtered_models(cls: Type[Model], primary_key: str, id_value: str, sort_by: str = 'create_time', nb: int = 3,
-                        access_level=None, start_index=0) -> List[Model]:
-    sort_by = SORTING_MAPPING[sort_by]
-    models = cls.objects(getattr(cls, primary_key) == id_value).order_by(sort_by)
-    if nb is None:
-        models = models.limit(None)
-    elif nb < 0:
-        raise ValueError(f"nb expected positive or None(no limit), got {nb}")
-    else:
-        models = models.limit(start_index + nb)
-
-    if access_level is not None:
-        models = [model for model in models if model.access_level == access_level]
-    if nb is None:
-        return models[start_index:]
-    else:
-        return models[start_index:start_index + nb]
-
-
-class PhotoUtils:
-    @classmethod
-    def create_from_reduced_photo(cls, reduced_photo: ReducedPhoto, **kwargs):
-        try:
-            return cls.if_not_exists().create(
-                **{k: getattr(reduced_photo, k) for k in reduced_photo.keys()},
-                **kwargs)
-        except LWTException as exp:
-            LOGGER.warning(f"Failed to create new record from reduced photo, photo_id={reduced_photo.photo_id}")
-            LOGGER.warning(f"{exp.existing}")
-            raise Exception(f"Failed to create a new record for the class {cls.__name__}")
-
-
-class TripUtils:
-    @classmethod
-    def create_from_reduced_trip(cls, reduced_trip: ReducedTrip, **kwargs):
-        try:
-            return cls.if_not_exists().create(
-                **{k: getattr(reduced_trip, k) for k in vars(reduced_trip).keys()},
-                **kwargs)
-        except LWTException as exp:
-            LOGGER.warning(f"Failed to create new record from reduced trip, trip_id={reduced_trip.trip_id}")
-            LOGGER.warning(f"{exp.existing}")
-            raise exp
 
 
 @dataclass
@@ -98,13 +50,18 @@ class Reply(UserType):
     content = columns.Text()
     liked_nb = columns.SmallInt(default=0)
 
+    entities: Entities
+
     def to_dict(self) -> Dict:
         return {
             "id": self.reply_id,
             "user": User.get_user_attributes_or_none(user_id=self.user, reduced=True),
             "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
             "content": self.content,
-            "likedNb": self.liked_nb
+            "likedNb": self.liked_nb,
+            "hashtags": self.entities.hashtags,
+            "mentions": self.entities.mentions,
+            "hasLiked": self.entities.hasLiked,
         }
 
     def __hash__(self):
@@ -194,11 +151,22 @@ class Comment(Model):
                                      start_index: int = 0) -> List[Reply]:
         sort_by = SORTING_MAPPING[sort_by]
         self.replies = list(self.replies)
-        self.replies.sort(key=lambda x: getattr(x, sort_by))
+        self.replies.sort(key=lambda x: getattr(x, sort_by), reverse=True)
         return self.replies[start_index:start_index + nb]
 
-    def get_replies(self, sort_by: str = "creteTime", nb: int = 6, start_index: int = 0) -> List[Dict]:
-        replies = self.get_filtered_replies_objects(sort_by=sort_by, nb=nb, start_index=start_index)
+    def get_replies(
+            self,
+            current_user_id: str,
+            sort_by: str = "creteTime",
+            nb: int = 6,
+            start_index: int = 0,
+    ) -> List[Dict]:
+        replies: List[Reply] = self.get_filtered_replies_objects(sort_by=sort_by, nb=nb, start_index=start_index)
+        for reply in replies:
+            reply.entities = EntitiesByComment.get_filtered_entities(
+                comment_id=str(reply.reply_id),
+                current_user_id=current_user_id
+            )
         return [r.to_dict() for r in replies]
 
     @classmethod
@@ -217,9 +185,11 @@ class CommentsByPhoto(Model):
     comment_id = columns.Text(primary_key=True, clustering_order="DESC")
     user = columns.Text()
     content = columns.Text()
-    liked_nb = columns.SmallInt(default=0)
-    reply_nb = columns.SmallInt(default=0)
+    liked_nb = columns.SmallInt(primary_key=True, clustering_order="DESC", default=0)
+    reply_nb = columns.SmallInt(primary_key=True, clustering_order="DESC", default=0)
     replies = columns.Set(UserDefinedType(Reply))
+
+    entities: Entities
 
     def to_dict(self) -> Dict:
         return {
@@ -229,7 +199,10 @@ class CommentsByPhoto(Model):
             "content": self.content,
             "likedNb": self.liked_nb,
             "replyNb": self.reply_nb,
-            "replies": [reply.to_dict() for reply in self.replies]
+            "replies": [reply.to_dict() for reply in self.replies],
+            "hashtags": self.entities.hashtags,
+            "mentions": self.entities.mentions,
+            "hasLiked": self.entities.hasLiked,
         }
 
     def get_filtered_replies_objects(self, sort_by: str = "creteTime", nb: int = 6,
@@ -239,38 +212,100 @@ class CommentsByPhoto(Model):
         self.replies.sort(key=lambda x: getattr(x, sort_by), reverse=True)
         return self.replies[start_index:start_index + nb]
 
-    def get_replies_objects(self, sort_by: str = "creteTime", nb: int = 6, start_index: int = 0) -> List[Reply]:
+    def get_replies_objects(
+            self,
+            sort_by: str = "creteTime",
+            nb: int = 6,
+            start_index: int = 0,
+    ) -> List[Reply]:
         replies = self.get_filtered_replies_objects(sort_by=sort_by, nb=nb, start_index=start_index)
         return replies
 
     @classmethod
-    def get_comments_objects(cls, photo_id: str, sort_by: str = SortType.CREATE_TIME.value, nb: int = 6) \
-            -> List[CommentsByPhoto]:
+    def get_comments_objects(
+            cls, photo_id: str,
+            current_user_id: str,
+            nb: int = 6,
+            comments_sort_type: str = "default",
+            start_index: int = 0,
+            replies_sort_by: str = SortType.CREATE_TIME.value,
+            reply_nb: int = 6) -> List[CommentsByPhoto]:
         try:
-            comments = cls.objects(photo_id=photo_id)
+            comments = get_filtered_models(
+                cls,
+                primary_key="photo_id",
+                id_value=photo_id,
+                sort_by=["-liked_nb", "-reply_nb", "-create_time"],  # cassandra can only sort (clustered) primary key
+                nb=nb,
+                start_index=start_index,
+            )
         except DoesNotExist:
             raise CommentNotFound(f"Comments with photo_id {photo_id} is not found")
         else:
             for comment in comments:
                 comment.replies = comment.get_replies_objects(
-                    sort_by=sort_by,
-                    nb=nb,
+                    sort_by=replies_sort_by,
+                    nb=reply_nb,
                     start_index=0
                 )
-
-            # convert to list so that it can be sorted
-            comments = list(comments)
-            comments.sort(key=lambda x: getattr(x, "liked_nb"), reverse=True)
+                comment.entities = EntitiesByComment.get_filtered_entities(
+                    comment_id=str(comment.comment_id),
+                    current_user_id=current_user_id
+                )
+                for reply in comment.replies:
+                    reply.entities = EntitiesByComment.get_filtered_entities(
+                        comment_id=str(reply.reply_id),
+                        current_user_id=current_user_id
+                    )
         return comments
 
     @classmethod
-    def get_comments(cls, photo_id: str, sort_by: str = SortType.CREATE_TIME.value, nb: int = 6) -> List[Dict]:
+    def get_comments(
+            cls,
+            photo_id: str,
+            current_user_id: str,
+            nb: int = 6,
+            comments_sort_type: str = "default",  # TODO: handle such sort type
+            start_index: int = 0,
+            replies_sort_type: str = SortType.CREATE_TIME.value,
+            reply_nb: int = 6,
+    ) -> List[Dict]:
         comments = cls.get_comments_objects(
             photo_id=photo_id,
-            sort_by=sort_by,
-            nb=nb
+            nb=nb,
+            comments_sort_type=comments_sort_type,
+            start_index=start_index,
+            replies_sort_by=replies_sort_type,
+            reply_nb=reply_nb,
+            current_user_id=current_user_id
         )
         return [comment.to_dict() for comment in comments]
+
+
+class TripUtils:
+    @classmethod
+    def create_from_reduced_trip(cls, reduced_trip: ReducedTrip, **kwargs):
+        try:
+            return cls.if_not_exists().create(
+                **{k: getattr(reduced_trip, k) for k in vars(reduced_trip).keys()},
+                **kwargs)
+        except LWTException as exp:
+            LOGGER.warning(f"Failed to create new record from reduced trip, trip_id={reduced_trip.trip_id}")
+            LOGGER.warning(f"{exp.existing}")
+            raise exp
+
+
+class PhotoUtils:
+    @classmethod
+    def create_from_reduced_photo(cls, reduced_photo: ReducedPhoto, **kwargs):
+        try:
+            return cls.if_not_exists().create(
+                **{k: getattr(reduced_photo, k) for k in reduced_photo.keys()},
+                **kwargs)
+        except LWTException as exp:
+            LOGGER.warning(f"Failed to create new record from reduced photo, photo_id={reduced_photo.photo_id}")
+            LOGGER.warning(f"{exp.existing}")
+            raise Exception(f"Failed to create a new record for the class {cls.__name__}")
 
 
 class Photo(Model, PhotoUtils):
@@ -358,17 +393,23 @@ class Photo(Model, PhotoUtils):
             return mentioned_users
         return mentioned_users[:nb]
 
-    def get_photo_information(self, photo_id: str, liked_users_sort_by: str = SortType.CREATE_TIME.value,
-                              liked_user_nb: int = 6,
-                              comments_sort_by: str = SortType.CREATE_TIME.value,
-                              comment_nb: int = 6) -> Dict:
+    def get_photo_information(
+        self,
+        photo_id: str,
+        current_user_id: str,
+        liked_users_sort_by: str = SortType.CREATE_TIME.value,
+        liked_user_nb: int = 6,
+        comments_sort_by: str = SortType.CREATE_TIME.value,
+        comment_nb: int = 6
+    ) -> Dict:
         photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
         photo.liked_users = self.get_liked_users_info(sort_by=liked_users_sort_by, nb=liked_user_nb)
         photo.mentioned_users = self.get_mentioned_users_info(sort_by=SortType.CREATE_TIME.value)
         photo.comments = CommentsByPhoto.get_comments_objects(
             photo_id=photo_id,
-            sort_by=comments_sort_by,
-            nb=comment_nb)
+            current_user_id=current_user_id,
+            replies_sort_by=comments_sort_by,
+            reply_nb=comment_nb)
         return photo.to_dict()
 
 
@@ -653,8 +694,8 @@ class Hashtag(UserType):
     def to_dict(self) -> Dict:
         return {
             "name": self.name,
-            "start_index": self.start_index,
-            "end_index": self.end_index,
+            "startIndex": self.start_index,
+            "endIndex": self.end_index,
         }
 
 
@@ -668,11 +709,18 @@ class MentionedUser(UserType):
 
     def to_dict(self) -> Dict:
         return {
-            "user_id": self.user_id,
-            "user_unique_name": self.user_unique_name,
-            "start_index": self.start_index,
-            "end_index": self.end_index,
+            "userId": self.user_id,
+            "uniqueName": self.user_unique_name,
+            "startIndex": self.start_index,
+            "endIndex": self.end_index,
         }
+
+
+@dataclass
+class Entities:
+    hashtags: List[Dict] = field(default_factory=list)
+    mentions: List[Dict] = field(default_factory=list)
+    hasLiked: bool = False
 
 
 class EntitiesByComment(Model):
@@ -689,6 +737,27 @@ class EntitiesByComment(Model):
             "mentioned_users": [user.to_dict() for user in self.mentioned_users],
             "likes": self.likes,
         }
+
+    @classmethod
+    def get_filtered_entities(cls, comment_id: str, current_user_id: str) -> Entities:
+        entity_models = get_filtered_models(
+            cls,
+            primary_key="comment_id",
+            id_value=comment_id,
+            sort_by=None,
+            access_level=None,
+            start_index=0,
+            nb=None
+        )
+        if len(entity_models) == 0:
+            return Entities()
+        entity_model = entity_models[0]
+        entity_dict = entity_model.to_dict()
+        return Entities(
+            hashtags=entity_dict["hashtags"],
+            mentions=entity_dict["mentioned_users"],
+            hasLiked=current_user_id in entity_dict["likes"],
+        )
 
 
 def create_and_return_new_trip(owner_id: str, trip_name: str, user_ids: List[str]) -> Optional[Trip]:

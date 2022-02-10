@@ -257,6 +257,7 @@ def get_photo_details(trip_id: str, photo_id: str, liked_users_sort_type: str,
             if photo:
                 return photo.get_photo_information(
                     photo_id=photo_id,
+                    current_user_id=current_user,
                     liked_users_sort_by=liked_users_sort_type,
                     liked_user_nb=liked_user_nb,
                     comments_sort_by=comments_sort_type,
@@ -267,7 +268,15 @@ def get_photo_details(trip_id: str, photo_id: str, liked_users_sort_type: str,
 
 
 @user_token_required
-def get_comments_by_photo(trip_id: str, photo_id: str, replies_sort_type: str, reply_nb: int) -> List[Dict]:
+def get_comments_by_photo(
+    trip_id: str,
+    photo_id: str,
+    nb: int,
+    comments_sort_type: str,
+    start_index: int,
+    replies_sort_type: str,
+    reply_nb: int
+) -> List[Dict]:
     """Get all the comments for the photo."""
     trip = get_trip(trip_id=trip_id)
     if trip:
@@ -276,8 +285,12 @@ def get_comments_by_photo(trip_id: str, photo_id: str, replies_sort_type: str, r
             try:
                 return CommentsByPhoto.get_comments(
                     photo_id=photo_id,
-                    sort_by=replies_sort_type,
-                    nb=reply_nb)
+                    current_user_id=current_user.id,
+                    nb=nb,
+                    comments_sort_type=comments_sort_type,
+                    start_index=start_index,
+                    replies_sort_type=replies_sort_type,
+                    reply_nb=reply_nb)
             except CommentNotFound as e:
                 raise APIError404(message=str(e))
         except PhotoNotFound as e:
@@ -297,6 +310,7 @@ def get_replies_by_comment(trip_id: str, photo_id: str, comment_id: str, sort_ty
                 try:
                     comment = Comment.get_comment(comment_id=comment_id)
                     return comment.get_replies(
+                        current_user_id=current_user.id,
                         sort_by=sort_type,
                         nb=nb,
                         start_index=start_index)
@@ -548,7 +562,7 @@ def update_trip_photo(trip_id: str, photo_id: str, access_level: str, mentioned_
     if trip:
         try:
             photo = _update_photo(trip_id, photo_id, access_level, mentioned_users, location)
-            return photo.get_photo_information(photo_id=photo_id)
+            return photo.get_photo_information(photo_id=photo_id, current_user_id=current_user)
         except PhotoNotFound as e:
             raise APIError404(message=str(e))
 

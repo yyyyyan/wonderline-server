@@ -70,6 +70,23 @@ trip_photo_parser.add_argument(
 
 photo_comments_parser = common_parser.copy()
 photo_comments_parser.add_argument(
+    "commentsSortType",
+    type=str,
+    choices=["default"],  # TODO: better handle such sort type
+    location='args',
+    default="default"
+)
+photo_comments_parser.add_argument(
+    'nb',
+    type=int,
+    location='args',
+    default=6)
+photo_comments_parser.add_argument(
+    "startIndex",
+    type=int,
+    location='args',
+    default=0)
+photo_comments_parser.add_argument(
     "repliesSortType",
     type=str,
     choices=get_enum_names(SortType),

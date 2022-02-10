@@ -184,6 +184,9 @@ class PhotoComments(Resource):
     def get(self, tripId, photoId):
         args = photo_comments_parser.parse_args()
         user_token = args.get("userToken")
+        comments_sort_type = args.get("commentsSortType")
+        nb = args.get("nb")
+        start_index = args.get("startIndex")
         replies_sort_type = args.get("repliesSortType")
         reply_nb = args.get("replyNb")
         return handle_request(
@@ -191,6 +194,9 @@ class PhotoComments(Resource):
             user_token=user_token,
             trip_id=tripId,
             photo_id=photoId,
+            comments_sort_type=comments_sort_type,
+            nb=nb,
+            start_index=start_index,
             replies_sort_type=replies_sort_type,
             reply_nb=reply_nb
         )
