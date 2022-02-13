@@ -9,14 +9,14 @@ from wonderline_app.api.common.request_parsers import common_parser
 from wonderline_app.api.common.responses import res_model
 from wonderline_app.api.namespaces import trips_namespace
 from wonderline_app.api.trips.request_models.models import trip_creation_model, trip_update_model, photo_upload_model, \
-    photo_update_model, photos_delete_model, photos_update_model
+    photo_update_model, photos_delete_model, photos_update_model, original_comment_model
 from wonderline_app.api.trips.request_parsers import trip_parser, trip_users_parser, trip_photos_parser, \
     trip_photo_parser, photo_comments_parser, comment_replies_parser
 from wonderline_app.api.trips.responses import trip_res, trip_users_res, trip_photos_res, trip_photo_res, \
     photo_comments_res, comment_replies_res
 from wonderline_app.core.api_logics import handle_request, get_complete_trip, get_users_by_trip, \
     get_photos_by_trip, get_photo_details, get_comments_by_photo, get_replies_by_comment, create_new_trip, update_trip, \
-    upload_trip_photos, update_trip_photo, delete_trip_photos, update_trip_photos
+    upload_trip_photos, update_trip_photo, delete_trip_photos, update_trip_photos, create_new_reply
 
 
 @trips_namespace.route("/<string:tripId>")
@@ -218,6 +218,27 @@ class CommentReplies(Resource):
             trip_id=tripId,
             photo_id=photoId,
             comment_id=commentId,
+            sort_type=sort_type,
+            start_index=start_index,
+            nb=nb
+        )
+
+    @trips_namespace.expect(common_parser, comment_replies_parser, original_comment_model, validate=True)
+    @trips_namespace.marshal_with(comment_replies_res)
+    def post(self, tripId, photoId, commentId):
+        args = comment_replies_parser.parse_args()
+        user_token = args.get("userToken")
+        sort_type = args.get("sortType")
+        start_index = args.get("startIndex")
+        nb = args.get("nb")
+        reply = request.json['comment']
+        return handle_request(
+            func=create_new_reply,
+            user_token=user_token,
+            trip_id=tripId,
+            photo_id=photoId,
+            comment_id=commentId,
+            reply=reply,
             sort_type=sort_type,
             start_index=start_index,
             nb=nb

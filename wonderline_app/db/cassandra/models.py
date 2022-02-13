@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.columns import UserDefinedType
 from cassandra.cqlengine.models import Model
@@ -66,6 +66,16 @@ class Reply(UserType):
 
     def __hash__(self):
         return id(self.reply_id)
+
+    @classmethod
+    def create(cls, content: str, user_id: str):
+        return cls(
+            reply_id=get_uuid(),
+            user=user_id,
+            create_time=get_current_timestamp(),
+            content=content,
+            liked_nb=0
+        )
 
 
 class ReducedPhoto(UserType):
@@ -129,8 +139,8 @@ class Comment(Model):
     __table_name__ = "comment"
 
     comment_id = columns.Text(primary_key=True)
-    create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
-    user = columns.Text(primary_key=True, clustering_order="DESC")
+    create_time = columns.DateTime()
+    user = columns.Text()
     content = columns.Text()
     liked_nb = columns.SmallInt(default=0)
     reply_nb = columns.SmallInt(default=0)
@@ -176,17 +186,22 @@ class Comment(Model):
         except DoesNotExist:
             raise CommentNotFound(f"Comment {comment_id} is not found")
 
+    def add_reply(self, reply: Reply) -> Reply:
+        self.replies.add(reply)
+        self.reply_nb += 1
+        self.update()
+
 
 class CommentsByPhoto(Model):
     __table_name__ = "comments_by_photo"
 
     photo_id = columns.Text(primary_key=True)
-    create_time = columns.DateTime(primary_key=True, clustering_order="DESC")
-    comment_id = columns.Text(primary_key=True, clustering_order="DESC")
+    create_time = columns.DateTime()
+    comment_id = columns.Text(primary_key=True)
     user = columns.Text()
     content = columns.Text()
-    liked_nb = columns.SmallInt(primary_key=True, clustering_order="DESC", default=0)
-    reply_nb = columns.SmallInt(primary_key=True, clustering_order="DESC", default=0)
+    liked_nb = columns.SmallInt(default=0)
+    reply_nb = columns.SmallInt(default=0)
     replies = columns.Set(UserDefinedType(Reply))
 
     entities: Entities
@@ -235,13 +250,16 @@ class CommentsByPhoto(Model):
                 cls,
                 primary_key="photo_id",
                 id_value=photo_id,
-                sort_by=["-liked_nb", "-reply_nb", "-create_time"],  # cassandra can only sort (clustered) primary key
-                nb=nb,
-                start_index=start_index,
+                sort_by=None,
+                nb=None,
+                start_index=0,
             )
         except DoesNotExist:
             raise CommentNotFound(f"Comments with photo_id {photo_id} is not found")
         else:
+            comments.sort(
+                key=lambda x: (-x.liked_nb, -x.reply_nb, -convert_date_to_timestamp_in_expected_unit(x.create_time)))
+            comments = comments[start_index: start_index + nb]
             for comment in comments:
                 comment.replies = comment.get_replies_objects(
                     sort_by=replies_sort_by,
@@ -280,6 +298,16 @@ class CommentsByPhoto(Model):
             current_user_id=current_user_id
         )
         return [comment.to_dict() for comment in comments]
+
+    @classmethod
+    def add_reply(cls, photo_id: str, comment_id: str, reply: Reply):
+        comment_to_update: CommentsByPhoto = cls.get(
+            photo_id=photo_id,
+            comment_id=comment_id,
+        )
+        comment_to_update.reply_nb += 1
+        comment_to_update.replies.add(reply)
+        comment_to_update.update()
 
 
 class TripUtils:
@@ -394,13 +422,13 @@ class Photo(Model, PhotoUtils):
         return mentioned_users[:nb]
 
     def get_photo_information(
-        self,
-        photo_id: str,
-        current_user_id: str,
-        liked_users_sort_by: str = SortType.CREATE_TIME.value,
-        liked_user_nb: int = 6,
-        comments_sort_by: str = SortType.CREATE_TIME.value,
-        comment_nb: int = 6
+            self,
+            photo_id: str,
+            current_user_id: str,
+            liked_users_sort_by: str = SortType.CREATE_TIME.value,
+            liked_user_nb: int = 6,
+            comments_sort_by: str = SortType.CREATE_TIME.value,
+            comment_nb: int = 6
     ) -> Dict:
         photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
         photo.liked_users = self.get_liked_users_info(sort_by=liked_users_sort_by, nb=liked_user_nb)
@@ -698,6 +726,14 @@ class Hashtag(UserType):
             "endIndex": self.end_index,
         }
 
+    @classmethod
+    def from_dict(cls, hashtag_as_dict):
+        return cls(
+            name=hashtag_as_dict["name"],
+            start_index=hashtag_as_dict["startIndex"],
+            end_index=hashtag_as_dict["endIndex"],
+        )
+
 
 class MentionedUser(UserType):
     __type_name__ = 'mentioned_user'
@@ -714,6 +750,15 @@ class MentionedUser(UserType):
             "startIndex": self.start_index,
             "endIndex": self.end_index,
         }
+
+    @classmethod
+    def from_dict(cls, mention_as_dict):
+        return cls(
+            user_id=mention_as_dict["userId"],
+            user_unique_name=mention_as_dict["uniqueName"],
+            start_index=mention_as_dict["startIndex"],
+            end_index=mention_as_dict["endIndex"],
+        )
 
 
 @dataclass
@@ -759,6 +804,21 @@ class EntitiesByComment(Model):
             hasLiked=current_user_id in entity_dict["likes"],
         )
 
+    @classmethod
+    def create_one_record(
+            cls,
+            comment_id: str,
+            hashtags: List[Hashtag],
+            mentioned_users: List[MentionedUser],
+            likes: Set[str]
+    ):
+        return EntitiesByComment.create(
+            comment_id=comment_id,
+            hashtags=hashtags,
+            mentioned_users=mentioned_users,
+            likes=likes,
+        )
+
 
 def create_and_return_new_trip(owner_id: str, trip_name: str, user_ids: List[str]) -> Optional[Trip]:
     if user_ids is None or not len(user_ids):
@@ -774,20 +834,6 @@ def create_and_return_new_trip(owner_id: str, trip_name: str, user_ids: List[str
     for user_id in user_ids:
         TripsByUser.create_from_reduced_trip(reduced_trip=reduced_trip, user_id=user_id)
     return new_trip
-
-
-def delete_all_about_given_trip(trip_id: str, photo_ids=None):
-    # only used for integration test
-    trip = Trip.get_trip_by_trip_id(trip_id=trip_id)
-    for user_id in trip.users:
-        trips_by_user_record = TripsByUser.get(
-            user_id=user_id,
-            trip_id=trip_id,
-            create_time=trip.create_time
-        )
-        trips_by_user_record.delete()
-    delete_photos(trip_id, photo_ids)
-    trip.delete()
 
 
 def delete_photos(trip_id: str, photo_ids: List[str]):
@@ -806,3 +852,40 @@ def delete_photos(trip_id: str, photo_ids: List[str]):
             remove_image_by_url(photo.high_quality_src)
             remove_image_by_url(photo.src)
             remove_image_by_url(photo.low_quality_src)
+
+
+def delete_all_about_given_trip(trip_id: str, photo_ids=None):
+    # only used for integration test
+    trip = Trip.get_trip_by_trip_id(trip_id=trip_id)
+    for user_id in trip.users:
+        trips_by_user_record = TripsByUser.get(
+            user_id=user_id,
+            trip_id=trip_id,
+            create_time=trip.create_time
+        )
+        trips_by_user_record.delete()
+    delete_photos(trip_id, photo_ids)
+    trip.delete()
+
+
+def delete_reply_given_reply_id(photo_id, comment_id: str, reply_id: str):
+    # only used for integration test
+    # remove in Comment
+    comment = Comment.get(comment_id=comment_id)
+    comment.replies = {reply for reply in comment.replies if reply.reply_id != reply_id}
+    comment.reply_nb -= 1
+    comment.update()
+    # remove in CommentsByPhoto
+    comment_in_comments_by_photo = CommentsByPhoto.get(
+        photo_id=photo_id,
+        comment_id=comment_id,
+    )
+    comment_in_comments_by_photo.replies = {reply for reply in comment_in_comments_by_photo.replies if
+                                            reply.reply_id != reply_id}
+    comment_in_comments_by_photo.reply_nb -= 1
+    comment_in_comments_by_photo.update()
+    # remove in EntitiesByComment
+    entities = EntitiesByComment.get(
+        comment_id=reply_id
+    )
+    entities.delete()

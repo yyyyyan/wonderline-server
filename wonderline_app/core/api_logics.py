@@ -14,7 +14,8 @@ from wonderline_app.core.image_service import ImageSize, upload_encoded_image, D
 from wonderline_app.core.api_responses.response import Response, Error, Feedback
 from wonderline_app.db.cassandra.exceptions import TripNotFound, CommentNotFound, PhotoNotFound
 from wonderline_app.db.cassandra.models import AlbumsByUser, TripsByUser, HighlightsByUser, MentionsByUser, Trip, \
-    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto, delete_photos
+    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto, delete_photos, Hashtag, \
+    MentionedUser, EntitiesByComment, Reply
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.models import User
@@ -269,13 +270,13 @@ def get_photo_details(trip_id: str, photo_id: str, liked_users_sort_type: str,
 
 @user_token_required
 def get_comments_by_photo(
-    trip_id: str,
-    photo_id: str,
-    nb: int,
-    comments_sort_type: str,
-    start_index: int,
-    replies_sort_type: str,
-    reply_nb: int
+        trip_id: str,
+        photo_id: str,
+        nb: int,
+        comments_sort_type: str,
+        start_index: int,
+        replies_sort_type: str,
+        reply_nb: int
 ) -> List[Dict]:
     """Get all the comments for the photo."""
     trip = get_trip(trip_id=trip_id)
@@ -318,6 +319,55 @@ def get_replies_by_comment(trip_id: str, photo_id: str, comment_id: str, sort_ty
                     raise APIError404(message=str(e))
         except PhotoNotFound as e:
             raise APIError404(message=str(e))
+
+
+@user_token_required
+def create_new_reply(
+        trip_id: str,
+        photo_id: str,
+        comment_id: str,
+        reply: Dict,
+        sort_type: str = SortType.CREATE_TIME.value,
+        nb: int = 3,
+        start_index: int = 0,
+) -> Tuple[List[Dict], APIFeedback201]:
+    trip = get_trip(trip_id=trip_id)
+    if trip:
+        try:
+            photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
+            if photo:
+                try:
+                    content, hashtags, mentions = reply["content"], reply["hashtags"], reply["mentions"]
+                    comment = Comment.get_comment(comment_id=comment_id)
+                    # create entities
+                    hashtags = [Hashtag.from_dict(h) for h in hashtags]
+                    mentioned_users = [MentionedUser.from_dict(m) for m in mentions]
+                    # create reply
+                    reply = Reply.create(content=content, user_id=current_user.id)
+                    EntitiesByComment.create_one_record(
+                        comment_id=reply.reply_id,
+                        hashtags=hashtags,
+                        mentioned_users=mentioned_users,
+                        likes=set()
+                    )
+                    # add reply to two comment tables
+                    comment.add_reply(reply=reply)
+                    CommentsByPhoto.add_reply(
+                        photo_id=photo_id,
+                        comment_id=comment_id,
+                        reply=reply
+                    )
+                    return comment.get_replies(
+                        current_user_id=current_user.id,
+                        sort_by=sort_type,
+                        nb=nb,
+                        start_index=start_index), APIFeedback201(
+                        message=f"Reply {reply.reply_id} has been successfully created")
+                except CommentNotFound as e:
+                    raise APIError404(message=str(e))
+        except PhotoNotFound as e:
+            raise APIError404(message=str(e))
+    return [{}]
 
 
 def sign_up(email: str,

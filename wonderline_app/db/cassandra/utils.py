@@ -5,7 +5,6 @@ from cassandra.cqlengine.models import Model
 
 from wonderline_app.api.common.enums import SortType
 
-
 LOGGER = logging.getLogger(__name__)
 
 

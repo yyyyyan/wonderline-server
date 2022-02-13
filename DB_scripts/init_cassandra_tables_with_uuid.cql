@@ -55,8 +55,8 @@ CREATE TABLE IF NOT EXISTS comment (
     liked_nb smallint,
     reply_nb smallint,
     replies set<frozen<reply>>,
-    PRIMARY KEY ((comment_id), create_time)
-) WITH CLUSTERING ORDER BY (create_time DESC);
+    PRIMARY KEY (comment_id)
+);
 
 CREATE TABLE IF NOT EXISTS comments_by_photo (
     photo_id uuid,
@@ -67,8 +67,8 @@ CREATE TABLE IF NOT EXISTS comments_by_photo (
     liked_nb smallint,
     reply_nb smallint,
     replies set<frozen<reply>>,
-    PRIMARY KEY ((photo_id), liked_nb, reply_nb, create_time, comment_id)
-) WITH CLUSTERING ORDER BY (liked_nb DESC, reply_nb DESC, create_time DESC);
+    PRIMARY KEY ((photo_id), comment_id)
+);
 
 
 CREATE TABLE IF NOT EXISTS photo (

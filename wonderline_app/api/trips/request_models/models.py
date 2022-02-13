@@ -42,10 +42,37 @@ photo_update_model = trips_namespace.model("PhotoToUpdate", {
     "mentionedUserIds": fields.List(fields.String(example="user_001", required=False, default=None)),
     "location": fields.String(example="Shanghai", required=False, default=None)
 })
+
 photos_update_model = trips_namespace.model("PhotosToUpdate", {
     "photoIds": fields.List(fields.String(example="photo_01_1", required=True)),
     "accessLevel": fields.String(example="everyone", required=False, default=None),
 })
+
 photos_delete_model = trips_namespace.model("PhotosToDelete", {
     "photoIds": fields.List(fields.String(example="photo_01_1", required=True))
+})
+
+
+comment_mention_model = trips_namespace.model("CommentMention", {
+    "uniqueName": fields.String(example="job_snow", required=True),
+    "userId": fields.String(example="user_001", required=True),
+    "startIndex": fields.Integer(example=18, required=True),
+    "endIndex": fields.Integer(example=27, required=True),
+})
+
+hashtag_model = trips_namespace.model("Hashtag", {
+    "name": fields.String(example="wonderline", required=True),
+    "startIndex": fields.Integer(example=6, required=True),
+    "endIndex": fields.Integer(example=17, required=True),
+})
+
+_original_comment_model = trips_namespace.model("_OriginalComment", {
+    "content": fields.String(example="hello #wonderline @jon_snow awesome", required=True),
+    "mentions": fields.List(fields.Nested(comment_mention_model)),
+    "hashtags": fields.List(fields.Nested(hashtag_model)),
+})
+
+
+original_comment_model = trips_namespace.model("OriginalComment", {
+    "comment": fields.Nested(_original_comment_model)
 })
