@@ -16,7 +16,7 @@ from wonderline_app.api.trips.responses import trip_res, trip_users_res, trip_ph
     photo_comments_res, comment_replies_res
 from wonderline_app.core.api_logics import handle_request, get_complete_trip, get_users_by_trip, \
     get_photos_by_trip, get_photo_details, get_comments_by_photo, get_replies_by_comment, create_new_trip, update_trip, \
-    upload_trip_photos, update_trip_photo, delete_trip_photos, update_trip_photos, create_new_reply
+    upload_trip_photos, update_trip_photo, delete_trip_photos, update_trip_photos, create_new_reply, create_new_comment
 
 
 @trips_namespace.route("/<string:tripId>")
@@ -199,6 +199,30 @@ class PhotoComments(Resource):
             start_index=start_index,
             replies_sort_type=replies_sort_type,
             reply_nb=reply_nb
+        )
+
+    @trips_namespace.expect(common_parser, photo_comments_parser, original_comment_model, validate=True)
+    @trips_namespace.marshal_with(photo_comments_res)
+    def post(self, tripId, photoId):
+        args = photo_comments_parser.parse_args()
+        user_token = args.get("userToken")
+        comments_sort_type = args.get("commentsSortType")
+        nb = args.get("nb")
+        start_index = args.get("startIndex")
+        replies_sort_type = args.get("repliesSortType")
+        reply_nb = args.get("replyNb")
+        comment = request.json['comment']
+        return handle_request(
+            func=create_new_comment,
+            user_token=user_token,
+            trip_id=tripId,
+            photo_id=photoId,
+            comments_sort_type=comments_sort_type,
+            nb=nb,
+            start_index=start_index,
+            replies_sort_type=replies_sort_type,
+            reply_nb=reply_nb,
+            comment=comment,
         )
 
 

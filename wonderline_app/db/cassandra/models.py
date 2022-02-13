@@ -310,6 +310,62 @@ class CommentsByPhoto(Model):
         comment_to_update.update()
 
 
+class CommentUtils:
+    @classmethod
+    def add_reply(cls, photo_id: str, comment: Comment, reply: Dict, user_id) -> Reply:
+        # TODO: create a dataclass for reply
+        content, hashtags, mentions = reply["content"], reply["hashtags"], reply["mentions"]
+        # get entities
+        hashtags = [Hashtag.from_dict(h) for h in hashtags]
+        mentioned_users = [MentionedUser.from_dict(m) for m in mentions]
+        # create reply
+        new_reply_record = Reply.create(content=content, user_id=user_id)
+        EntitiesByComment.create_one_record(
+            comment_id=new_reply_record.reply_id,  # type: ignore
+            hashtags=hashtags,
+            mentioned_users=mentioned_users,
+            likes=set()
+        )
+        # add reply to two comment tables
+        comment.add_reply(reply=new_reply_record)
+        CommentsByPhoto.add_reply(
+            photo_id=photo_id,
+            comment_id=comment.comment_id,  # type: ignore
+            reply=new_reply_record
+        )
+        return new_reply_record
+
+    @classmethod
+    def add_comment(cls, photo_id: str, comment: Dict, user_id: str) -> Reply:
+        content, hashtags, mentions = comment["content"], comment["hashtags"], comment["mentions"]
+        create_time = get_current_timestamp()
+        comment_id = get_uuid()
+        new_comment_record = Comment.create(
+            comment_id=comment_id,
+            create_time=create_time,
+            user=user_id,
+            content=content,
+        )
+        # get entities
+        hashtags = [Hashtag.from_dict(h) for h in hashtags]
+        mentioned_users = [MentionedUser.from_dict(m) for m in mentions]
+        EntitiesByComment.create_one_record(
+            comment_id=comment_id,  # type: ignore
+            hashtags=hashtags,
+            mentioned_users=mentioned_users,
+            likes=set()
+        )
+
+        CommentsByPhoto.create(
+            photo_id=photo_id,
+            create_time=create_time,
+            comment_id=comment_id,
+            user=user_id,
+            content=content,
+        )
+        return new_comment_record
+
+
 class TripUtils:
     @classmethod
     def create_from_reduced_trip(cls, reduced_trip: ReducedTrip, **kwargs):
@@ -868,7 +924,17 @@ def delete_all_about_given_trip(trip_id: str, photo_ids=None):
     trip.delete()
 
 
-def delete_reply_given_reply_id(photo_id, comment_id: str, reply_id: str):
+def delete_comment(photo_id: str, comment_id: str):
+    # only used for integration test for now
+    Comment.get(comment_id=comment_id).delete()
+    CommentsByPhoto.get(
+        photo_id=photo_id,
+        comment_id=comment_id
+    ).delete()
+    EntitiesByComment.get(comment_id=comment_id).delete()
+
+
+def delete_reply(photo_id: str, comment_id: str, reply_id: str):
     # only used for integration test
     # remove in Comment
     comment = Comment.get(comment_id=comment_id)
@@ -885,7 +951,4 @@ def delete_reply_given_reply_id(photo_id, comment_id: str, reply_id: str):
     comment_in_comments_by_photo.reply_nb -= 1
     comment_in_comments_by_photo.update()
     # remove in EntitiesByComment
-    entities = EntitiesByComment.get(
-        comment_id=reply_id
-    )
-    entities.delete()
+    EntitiesByComment.get(comment_id=reply_id).delete()

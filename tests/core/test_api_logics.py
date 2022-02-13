@@ -3,7 +3,7 @@ import unittest
 
 from wonderline_app import APP
 from wonderline_app.db.cassandra.models import create_and_return_new_trip, delete_all_about_given_trip, \
-    delete_reply_given_reply_id
+    delete_reply, delete_comment
 from wonderline_app.db.postgres.init import db_session
 from wonderline_app.db.postgres.models import User
 from wonderline_app.utils import encode_image
@@ -2122,81 +2122,82 @@ class ApiTEST(unittest.TestCase):
             }
         )
         reply_id_to_remove = [r["id"] for r in response.json["payload"] if not r["id"].startswith("reply")][0]
+        expected_response = {
+            "payload": [
+                {
+                    "id": "2006bf62-663e-44b7-89f0-6ceb359aa473",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "nickName": "Jon Snow",
+                        "uniqueName": "jon_snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "createTime": 1644708233,
+                    "content": "hello #wonderline @jon_snow awesome",
+                    "likedNb": 0,
+                    "mentions": [
+                        {
+                            "uniqueName": "job_snow",
+                            "userId": "user_001",
+                            "startIndex": 18,
+                            "endIndex": 27
+                        }
+                    ],
+                    "hashtags": [
+                        {
+                            "name": "wonderline",
+                            "startIndex": 6,
+                            "endIndex": 17
+                        }
+                    ],
+                    "hasLiked": False
+                },
+                {
+                    "id": "reply_02",
+                    "user": {
+                        "id": "user_006",
+                        "accessLevel": "everyone",
+                        "nickName": "Cersei Lannister",
+                        "uniqueName": "cersei_lannister",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "createTime": 1596142639,
+                    "content": "good",
+                    "likedNb": 4,
+                    "mentions": [],
+                    "hashtags": [],
+                    "hasLiked": False
+                },
+                {
+                    "id": "reply_01",
+                    "user": {
+                        "id": "user_002",
+                        "accessLevel": "everyone",
+                        "nickName": "Daenerys Targaryen",
+                        "uniqueName": "daenerys_targaryen",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "createTime": 1596142629,
+                    "content": "what?",
+                    "likedNb": 3,
+                    "mentions": [],
+                    "hashtags": [],
+                    "hasLiked": False
+                }
+            ],
+            "feedbacks": [
+                {
+                    "code": 201,
+                    "message": "Reply 2006bf62-663e-44b7-89f0-6ceb359aa473 has been successfully created"
+                }
+            ],
+            "errors": [],
+            "timestamp": 1644708233
+        }
         self._assert_response(
             expected_code=201,
-            expected_res={
-                "payload": [
-                    {
-                        "id": "2006bf62-663e-44b7-89f0-6ceb359aa473",
-                        "user": {
-                            "id": "user_001",
-                            "accessLevel": "everyone",
-                            "nickName": "Jon Snow",
-                            "uniqueName": "jon_snow",
-                            "avatarSrc": "avatar.png"
-                        },
-                        "createTime": 1644708233,
-                        "content": "hello #wonderline @jon_snow awesome",
-                        "likedNb": 0,
-                        "mentions": [
-                            {
-                                "uniqueName": "job_snow",
-                                "userId": "user_001",
-                                "startIndex": 18,
-                                "endIndex": 27
-                            }
-                        ],
-                        "hashtags": [
-                            {
-                                "name": "wonderline",
-                                "startIndex": 6,
-                                "endIndex": 17
-                            }
-                        ],
-                        "hasLiked": False
-                    },
-                    {
-                        "id": "reply_02",
-                        "user": {
-                            "id": "user_006",
-                            "accessLevel": "everyone",
-                            "nickName": "Cersei Lannister",
-                            "uniqueName": "cersei_lannister",
-                            "avatarSrc": "avatar.png"
-                        },
-                        "createTime": 1596142639,
-                        "content": "good",
-                        "likedNb": 4,
-                        "mentions": [],
-                        "hashtags": [],
-                        "hasLiked": False
-                    },
-                    {
-                        "id": "reply_01",
-                        "user": {
-                            "id": "user_002",
-                            "accessLevel": "everyone",
-                            "nickName": "Daenerys Targaryen",
-                            "uniqueName": "daenerys_targaryen",
-                            "avatarSrc": "avatar.png"
-                        },
-                        "createTime": 1596142629,
-                        "content": "what?",
-                        "likedNb": 3,
-                        "mentions": [],
-                        "hashtags": [],
-                        "hasLiked": False
-                    }
-                ],
-                "feedbacks": [
-                    {
-                        "code": 201,
-                        "message": "Reply 2006bf62-663e-44b7-89f0-6ceb359aa473 has been successfully created"
-                    }
-                ],
-                "errors": [],
-                "timestamp": 1644708233
-            },
+            expected_res=expected_response,
             response=response,
             excludes=[
                 'timestamp',
@@ -2205,8 +2206,228 @@ class ApiTEST(unittest.TestCase):
                 'message'
             ]
         )
-        delete_reply_given_reply_id(
+        delete_reply(
             photo_id="photo_01_1",
             comment_id="comment_01",
             reply_id=reply_id_to_remove,
         )
+
+    def test_post_new_comment(self):
+        response = self._post_req_from_jon(
+            endpoint='/trips/trip_01/photos/photo_01_1/comments',
+
+            method='post',
+            params={
+                "userToken": 'test',
+                "repliesSortType": "createTime",
+                "replyNb": 6,
+                "nb": 6
+            },
+            payload={
+                "comment": {
+                    "content": "hello #wonderline @jon_snow awesome",
+                    "mentions": [
+                        {
+                            "uniqueName": "job_snow",
+                            "userId": "user_001",
+                            "startIndex": 18,
+                            "endIndex": 27
+                        }
+                    ],
+                    "hashtags": [
+                        {
+                            "name": "wonderline",
+                            "startIndex": 6,
+                            "endIndex": 17
+                        }
+                    ]
+                }
+            }
+        )
+        expected_response = {
+            "payload": [
+                {
+                    "replyNb": 3,
+                    "replies": [
+                        {
+                            "id": "reply_03",
+                            "user": {
+                                "id": "user_005",
+                                "accessLevel": "everyone",
+                                "nickName": "Samwell Tarly",
+                                "uniqueName": "samwell_tarly",
+                                "avatarSrc": "avatar.png"
+                            },
+                            "createTime": 1596146639,
+                            "content": "yes",
+                            "likedNb": 1,
+                            "mentions": [],
+                            "hashtags": [],
+                            "hasLiked": False
+                        },
+                        {
+                            "id": "reply_02",
+                            "user": {
+                                "id": "user_004",
+                                "accessLevel": "everyone",
+                                "nickName": "Blue Dragon",
+                                "uniqueName": "blue_dragon",
+                                "avatarSrc": "avatar.png"
+                            },
+                            "createTime": 1596142639,
+                            "content": "good",
+                            "likedNb": 3,
+                            "mentions": [],
+                            "hashtags": [],
+                            "hasLiked": False
+                        },
+                        {
+                            "id": "reply_01",
+                            "user": {
+                                "id": "user_003",
+                                "accessLevel": "everyone",
+                                "nickName": "Red Dragon",
+                                "uniqueName": "red_dragon",
+                                "avatarSrc": "avatar.png"
+                            },
+                            "createTime": 1596142629,
+                            "content": "what?",
+                            "likedNb": 3,
+                            "mentions": [],
+                            "hashtags": [],
+                            "hasLiked": False
+                        }
+                    ],
+                    "id": "comment_02",
+                    "user": {
+                        "id": "user_002",
+                        "accessLevel": "everyone",
+                        "nickName": "Daenerys Targaryen",
+                        "uniqueName": "daenerys_targaryen",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "createTime": 1596142639,
+                    "content": "hello #wonderline @jon_snow awesome",
+                    "likedNb": 7,
+                    "mentions": [
+                        {
+                            "uniqueName": "jon_snow",
+                            "userId": "user_001",
+                            "startIndex": 18,
+                            "endIndex": 27
+                        }
+                    ],
+                    "hashtags": [
+                        {
+                            "name": "wonderline",
+                            "startIndex": 6,
+                            "endIndex": 17
+                        }
+                    ],
+                    "hasLiked": True
+                },
+                {
+                    "replyNb": 2,
+                    "replies": [
+                        {
+                            "id": "reply_02",
+                            "user": {
+                                "id": "user_006",
+                                "accessLevel": "everyone",
+                                "nickName": "Cersei Lannister",
+                                "uniqueName": "cersei_lannister",
+                                "avatarSrc": "avatar.png"
+                            },
+                            "createTime": 1596142639,
+                            "content": "good",
+                            "likedNb": 4,
+                            "mentions": [],
+                            "hashtags": [],
+                            "hasLiked": False
+                        },
+                        {
+                            "id": "reply_01",
+                            "user": {
+                                "id": "user_002",
+                                "accessLevel": "everyone",
+                                "nickName": "Daenerys Targaryen",
+                                "uniqueName": "daenerys_targaryen",
+                                "avatarSrc": "avatar.png"
+                            },
+                            "createTime": 1596142629,
+                            "content": "what?",
+                            "likedNb": 3,
+                            "mentions": [],
+                            "hashtags": [],
+                            "hasLiked": False
+                        }
+                    ],
+                    "id": "comment_01",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "nickName": "Jon Snow",
+                        "uniqueName": "jon_snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "createTime": 1596142629,
+                    "content": "hi",
+                    "likedNb": 6,
+                    "mentions": [],
+                    "hashtags": [],
+                    "hasLiked": False
+                },
+                {
+                    "replyNb": 0,
+                    "replies": [],
+                    "id": "5704bd52-4a1d-41da-9081-648120495f50",
+                    "user": {
+                        "id": "user_001",
+                        "accessLevel": "everyone",
+                        "nickName": "Jon Snow",
+                        "uniqueName": "jon_snow",
+                        "avatarSrc": "avatar.png"
+                    },
+                    "createTime": 1644750378,
+                    "content": "hello #wonderline @jon_snow awesome",
+                    "likedNb": 0,
+                    "mentions": [
+                        {
+                            "uniqueName": "job_snow",
+                            "userId": "user_001",
+                            "startIndex": 18,
+                            "endIndex": 27
+                        }
+                    ],
+                    "hashtags": [
+                        {
+                            "name": "wonderline",
+                            "startIndex": 6,
+                            "endIndex": 17
+                        }
+                    ],
+                    "hasLiked": False
+                }
+            ],
+            "feedbacks": [
+                {
+                    "code": 201,
+                    "message": "Comment 5704bd52-4a1d-41da-9081-648120495f50 has been successfully created"
+                }
+            ],
+            "errors": [],
+            "timestamp": 1644750378
+        }
+        comment_id_to_remove = [r["id"] for r in response.json["payload"] if not r["id"].startswith("comment")][0]
+        self._assert_response(
+            expected_code=201,
+            expected_res=expected_response,
+            response=response,
+            excludes=[
+                'timestamp',
+                'createTime',
+                'id',
+                'message'
+            ]
+        )
+        delete_comment(photo_id="photo_01_1", comment_id=comment_id_to_remove)
