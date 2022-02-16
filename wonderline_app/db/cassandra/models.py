@@ -6,6 +6,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+from itertools import islice
 from typing import List, Dict, Optional, Set
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.columns import UserDefinedType
@@ -41,10 +42,43 @@ class ReducedTrip:
     cover_photo: ReducedPhoto = None
 
 
+@dataclass
+class ReplyWithId:
+    reply_id: str
+    _reply: Reply
+
+    def to_dict(self):
+        return {
+            "id": self.reply_id,
+            **self._reply.to_dict()
+        }
+
+    @classmethod
+    def create(cls, content: str, user_id: str):
+        return cls(
+            reply_id=get_uuid(),
+            _reply=Reply.create(content, user_id)
+        )
+
+    def __getattr__(self, item):
+        getattr(self._reply, item)
+
+    @property
+    def entities(self):
+        return self._reply.entities
+
+    @entities.setter
+    def entities(self, value):
+        self._reply.entities = value
+
+    @property
+    def reply_value(self):
+        return self._reply
+
+
 class Reply(UserType):
     __type_name__ = 'reply'
 
-    reply_id = columns.Text()
     user = columns.Text()
     create_time = columns.DateTime()
     content = columns.Text()
@@ -54,7 +88,6 @@ class Reply(UserType):
 
     def to_dict(self) -> Dict:
         return {
-            "id": self.reply_id,
             "user": User.get_user_attributes_or_none(user_id=self.user, reduced=True),
             "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
             "content": self.content,
@@ -70,7 +103,6 @@ class Reply(UserType):
     @classmethod
     def create(cls, content: str, user_id: str):
         return cls(
-            reply_id=get_uuid(),
             user=user_id,
             create_time=get_current_timestamp(),
             content=content,
@@ -144,7 +176,7 @@ class Comment(Model):
     content = columns.Text()
     liked_nb = columns.SmallInt(default=0)
     reply_nb = columns.SmallInt(default=0)
-    replies = columns.Set(UserDefinedType(Reply))
+    replies = columns.Map(columns.Text, UserDefinedType(Reply))
 
     def to_dict(self) -> Dict:
         return {
@@ -154,15 +186,18 @@ class Comment(Model):
             "content": self.content,
             "likedNb": self.liked_nb,
             "replyNb": self.reply_nb,
+            # TODO: self.replies is List[ReplyWithId], ambiguity !
             "replies": [reply.to_dict() for reply in self.replies]
         }
 
     def get_filtered_replies_objects(self, sort_by: str = "creteTime", nb: int = 6,
-                                     start_index: int = 0) -> List[Reply]:
-        sort_by = SORTING_MAPPING[sort_by]
-        self.replies = list(self.replies)
-        self.replies.sort(key=lambda x: getattr(x, sort_by), reverse=True)
-        return self.replies[start_index:start_index + nb]
+                                     start_index: int = 0) -> List[ReplyWithId]:
+        return CommentUtils.get_filtered_replies_objects(
+            replies=self.replies,  # type: ignore
+            sort_by=sort_by,
+            start_index=start_index,
+            nb=nb
+        )
 
     def get_replies(
             self,
@@ -171,7 +206,7 @@ class Comment(Model):
             nb: int = 6,
             start_index: int = 0,
     ) -> List[Dict]:
-        replies: List[Reply] = self.get_filtered_replies_objects(sort_by=sort_by, nb=nb, start_index=start_index)
+        replies: List[ReplyWithId] = self.get_filtered_replies_objects(sort_by=sort_by, nb=nb, start_index=start_index)
         for reply in replies:
             reply.entities = EntitiesByComment.get_filtered_entities(
                 comment_id=str(reply.reply_id),
@@ -186,8 +221,8 @@ class Comment(Model):
         except DoesNotExist:
             raise CommentNotFound(f"Comment {comment_id} is not found")
 
-    def add_reply(self, reply: Reply) -> Reply:
-        self.replies.add(reply)
+    def add_reply(self, reply: ReplyWithId):
+        self.replies[reply.reply_id] = reply.reply_value  # type: ignore
         self.reply_nb += 1
         self.update()
 
@@ -202,7 +237,7 @@ class CommentsByPhoto(Model):
     content = columns.Text()
     liked_nb = columns.SmallInt(default=0)
     reply_nb = columns.SmallInt(default=0)
-    replies = columns.Set(UserDefinedType(Reply))
+    replies = columns.Map(columns.Text, UserDefinedType(Reply))
 
     entities: Entities
 
@@ -214,6 +249,7 @@ class CommentsByPhoto(Model):
             "content": self.content,
             "likedNb": self.liked_nb,
             "replyNb": self.reply_nb,
+            # TODO: self.replies is List[ReplyWithId], ambiguity !
             "replies": [reply.to_dict() for reply in self.replies],
             "hashtags": self.entities.hashtags,
             "mentions": self.entities.mentions,
@@ -221,18 +257,20 @@ class CommentsByPhoto(Model):
         }
 
     def get_filtered_replies_objects(self, sort_by: str = "creteTime", nb: int = 6,
-                                     start_index: int = 0) -> List[Reply]:
-        sort_by = SORTING_MAPPING[sort_by]
-        self.replies = list(self.replies)
-        self.replies.sort(key=lambda x: getattr(x, sort_by), reverse=True)
-        return self.replies[start_index:start_index + nb]
+                                     start_index: int = 0) -> List[ReplyWithId]:
+        return CommentUtils.get_filtered_replies_objects(
+            replies=self.replies,  # type: ignore
+            sort_by=sort_by,
+            start_index=start_index,
+            nb=nb
+        )
 
     def get_replies_objects(
             self,
             sort_by: str = "creteTime",
             nb: int = 6,
             start_index: int = 0,
-    ) -> List[Reply]:
+    ) -> List[ReplyWithId]:
         replies = self.get_filtered_replies_objects(sort_by=sort_by, nb=nb, start_index=start_index)
         return replies
 
@@ -300,26 +338,25 @@ class CommentsByPhoto(Model):
         return [comment.to_dict() for comment in comments]
 
     @classmethod
-    def add_reply(cls, photo_id: str, comment_id: str, reply: Reply):
+    def add_reply(cls, photo_id: str, comment_id: str, reply: ReplyWithId):
         comment_to_update: CommentsByPhoto = cls.get(
             photo_id=photo_id,
             comment_id=comment_id,
         )
         comment_to_update.reply_nb += 1
-        comment_to_update.replies.add(reply)
+        comment_to_update.replies[reply.reply_id] = reply.reply_value  # type: ignore
         comment_to_update.update()
 
 
 class CommentUtils:
     @classmethod
-    def add_reply(cls, photo_id: str, comment: Comment, reply: Dict, user_id) -> Reply:
-        # TODO: create a dataclass for reply
-        content, hashtags, mentions = reply["content"], reply["hashtags"], reply["mentions"]
+    def add_reply(cls, photo_id: str, comment: Comment, reply_payload: Dict, user_id) -> ReplyWithId:
+        content, hashtags, mentions = reply_payload["content"], reply_payload["hashtags"], reply_payload["mentions"]
         # get entities
         hashtags = [Hashtag.from_dict(h) for h in hashtags]
         mentioned_users = [MentionedUser.from_dict(m) for m in mentions]
         # create reply
-        new_reply_record = Reply.create(content=content, user_id=user_id)
+        new_reply_record = ReplyWithId.create(content=content, user_id=user_id)
         EntitiesByComment.create_one_record(
             comment_id=new_reply_record.reply_id,  # type: ignore
             hashtags=hashtags,
@@ -364,6 +401,15 @@ class CommentUtils:
             content=content,
         )
         return new_comment_record
+
+    @classmethod
+    def get_filtered_replies_objects(cls, replies: columns.Map(columns.Text, UserDefinedType(Reply)),
+                                     sort_by: str = "creteTime", nb: int = 6,
+                                     start_index: int = 0) -> List[ReplyWithId]:
+        sort_by = SORTING_MAPPING[sort_by]
+        return [ReplyWithId(id_, reply) for id_, reply in sorted(
+            replies.items(), key=lambda x: getattr(replies[x[0]], sort_by), reverse=True)][  # type: ignore
+               start_index: start_index + nb]
 
 
 class TripUtils:
@@ -938,7 +984,7 @@ def delete_reply(photo_id: str, comment_id: str, reply_id: str):
     # only used for integration test
     # remove in Comment
     comment = Comment.get(comment_id=comment_id)
-    comment.replies = {reply for reply in comment.replies if reply.reply_id != reply_id}
+    comment.replies[reply_id] = None
     comment.reply_nb -= 1
     comment.update()
     # remove in CommentsByPhoto
@@ -946,8 +992,7 @@ def delete_reply(photo_id: str, comment_id: str, reply_id: str):
         photo_id=photo_id,
         comment_id=comment_id,
     )
-    comment_in_comments_by_photo.replies = {reply for reply in comment_in_comments_by_photo.replies if
-                                            reply.reply_id != reply_id}
+    comment_in_comments_by_photo.replies[reply_id] = None
     comment_in_comments_by_photo.reply_nb -= 1
     comment_in_comments_by_photo.update()
     # remove in EntitiesByComment

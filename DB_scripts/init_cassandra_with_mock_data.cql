@@ -1664,15 +1664,15 @@ INSERT INTO wonderline.comments_by_photo (
     6,
     2,
     {
+        'reply_01':
         {
-            reply_id: 'reply_01',
             user: 'user_002',
             create_time: 1596142629728,
             content: 'what?',
             liked_nb: 3
         },
+        'reply_02':
         {
-            reply_id: 'reply_02',
             user: 'user_006',
             create_time: 1596142639728,
             content: 'good',
@@ -1699,22 +1699,22 @@ INSERT INTO wonderline.comments_by_photo (
     7,
     3,
     {
+        'reply_01':
         {
-            reply_id: 'reply_01',
             user: 'user_003',
             create_time: 1596142629728,
             content: 'what?',
             liked_nb: 3
         },
+        'reply_02':
         {
-            reply_id: 'reply_02',
             user: 'user_004',
             create_time: 1596142639728,
             content: 'good',
             liked_nb: 3
         },
+        'reply_03':
         {
-            reply_id: 'reply_03',
             user: 'user_005',
             create_time: 1596146639728,
             content: 'yes',
@@ -1739,15 +1739,15 @@ INSERT INTO wonderline.comment (
     6,
     2,
     {
+        'reply_01':
         {
-            reply_id: 'reply_01',
             user: 'user_002',
             create_time: 1596142629728,
             content: 'what?',
             liked_nb: 3
         },
+        'reply_02':
         {
-            reply_id: 'reply_02',
             user: 'user_006',
             create_time: 1596142639728,
             content: 'good',
@@ -1772,22 +1772,22 @@ INSERT INTO wonderline.comment (
     7,
     3,
     {
+        'reply_01':
         {
-            reply_id: 'reply_01',
             user: 'user_003',
             create_time: 1596142629728,
             content: 'what?',
             liked_nb: 3
         },
+        'reply_02':
         {
-            reply_id: 'reply_02',
             user: 'user_004',
             create_time: 1596142639728,
             content: 'good',
             liked_nb: 3
         },
+        'reply_03':
         {
-            reply_id: 'reply_03',
             user: 'user_005',
             create_time: 1596146639728,
             content: 'yes',

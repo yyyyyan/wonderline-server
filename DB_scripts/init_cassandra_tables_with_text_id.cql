@@ -3,7 +3,6 @@ CREATE KEYSPACE IF NOT EXISTS wonderline WITH replication = {'class':'SimpleStra
 USE wonderline;
 
 CREATE TYPE IF NOT EXISTS reply (
-    reply_id text,
     user text,
     create_time timestamp,
     content text,
@@ -53,7 +52,7 @@ CREATE TABLE IF NOT EXISTS comment (
     content text,
     liked_nb smallint,
     reply_nb smallint,
-    replies set<frozen<reply>>,
+    replies map<text, frozen<reply>>,
     PRIMARY KEY (comment_id)
 );
 
@@ -65,7 +64,7 @@ CREATE TABLE IF NOT EXISTS   comments_by_photo (
     content text,
     liked_nb smallint,
     reply_nb smallint,
-    replies set<frozen<reply>>,
+    replies map<text, frozen<reply>>,
     PRIMARY KEY ((photo_id), comment_id)
 );
 

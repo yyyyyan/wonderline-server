@@ -380,7 +380,7 @@ def create_new_reply(
                     reply_record = CommentUtils.add_reply(
                         photo_id=photo_id,
                         comment=comment,
-                        reply=reply,
+                        reply_payload=reply,
                         user_id=current_user.id,
                     )
                     return comment.get_replies(
