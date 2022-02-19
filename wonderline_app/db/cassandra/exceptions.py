@@ -8,3 +8,7 @@ class TripNotFound(Exception):
 
 class CommentNotFound(Exception):
     pass
+
+
+class ReplyNotFound(Exception):
+    pass

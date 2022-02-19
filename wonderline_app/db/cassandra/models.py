@@ -18,7 +18,7 @@ from cassandra.cqlengine.query import LWTException
 from wonderline_app.api.common.enums import SortType, AccessLevel, TripStatus
 from wonderline_app.core.image_service import remove_image_by_url
 from wonderline_app.db.cassandra.utils import SORTING_MAPPING, get_filtered_models
-from wonderline_app.db.cassandra.exceptions import PhotoNotFound, TripNotFound, CommentNotFound
+from wonderline_app.db.cassandra.exceptions import PhotoNotFound, TripNotFound, CommentNotFound, ReplyNotFound
 from wonderline_app.db.postgres.exceptions import UserNotFound
 from wonderline_app.db.postgres.models import User
 from wonderline_app.utils import convert_date_to_timestamp_in_expected_unit, get_current_timestamp, get_uuid
@@ -1036,6 +1036,8 @@ def delete_db_reply(photo_id: str, comment_id: str, reply_id: str):
     # only used for integration test
     # remove in Comment
     comment = Comment.get(comment_id=comment_id)
+    if reply_id not in comment.replies:
+        raise ReplyNotFound(f"Reply {reply_id} is not found")
     comment.replies[reply_id] = None
     comment.reply_nb -= 1
     comment.update()
