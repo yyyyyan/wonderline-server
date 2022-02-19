@@ -178,19 +178,24 @@ class Comment(Model):
     reply_nb = columns.SmallInt(default=0)
     replies = columns.Map(columns.Text, UserDefinedType(Reply))
 
+    entities: Entities
+
     def to_dict(self) -> Dict:
         return {
             "id": self.comment_id,
             "createTime": convert_date_to_timestamp_in_expected_unit(self.create_time),
-            "user": self.user,
+            "user": User.get_user_attributes_or_none(user_id=self.user, reduced=True),
             "content": self.content,
             "likedNb": self.liked_nb,
             "replyNb": self.reply_nb,
             # TODO: self.replies is List[ReplyWithId], ambiguity !
-            "replies": [reply.to_dict() for reply in self.replies]
+            "replies": [reply.to_dict() for reply in self.replies],
+            "hashtags": self.entities.hashtags,
+            "mentions": self.entities.mentions,
+            "hasLiked": self.entities.hasLiked,
         }
 
-    def get_filtered_replies_objects(self, sort_by: str = "creteTime", nb: int = 6,
+    def get_filtered_replies_objects(self, sort_by: str = "createTime", nb: int = 6,
                                      start_index: int = 0) -> List[ReplyWithId]:
         return CommentUtils.get_filtered_replies_objects(
             replies=self.replies,  # type: ignore
@@ -199,20 +204,43 @@ class Comment(Model):
             nb=nb
         )
 
-    def get_replies(
+    def get_replies_with_ids(
             self,
             current_user_id: str,
-            sort_by: str = "creteTime",
+            sort_by: str = "createTime",
             nb: int = 6,
-            start_index: int = 0,
-    ) -> List[Dict]:
+            start_index: int = 0
+    ):
         replies: List[ReplyWithId] = self.get_filtered_replies_objects(sort_by=sort_by, nb=nb, start_index=start_index)
         for reply in replies:
-            reply.entities = EntitiesByComment.get_filtered_entities(
+            reply.entities = EntitiesByComment.get_entities(
                 comment_id=str(reply.reply_id),
                 current_user_id=current_user_id
             )
+        return replies
+
+    def get_replies(
+            self,
+            current_user_id: str,
+            sort_by: str = "createTime",
+            nb: int = 6,
+            start_index: int = 0,
+    ) -> List[Dict]:
+        replies = self.get_replies_with_ids(
+            current_user_id=current_user_id,
+            sort_by=sort_by,
+            nb=nb,
+            start_index=start_index,
+        )
         return [r.to_dict() for r in replies]
+
+    def get_comment_as_dict(self, current_user_id: str):
+        self.replies = self.get_replies_with_ids(current_user_id=current_user_id)
+        self.entities = EntitiesByComment.get_entities(
+            comment_id=str(self.comment_id),
+            current_user_id=current_user_id
+        )
+        return self.to_dict()
 
     @classmethod
     def get_comment(cls, comment_id: str) -> Comment:
@@ -225,6 +253,25 @@ class Comment(Model):
         self.replies[reply.reply_id] = reply.reply_value  # type: ignore
         self.reply_nb += 1
         self.update()
+
+    def update_comment(self, photo_id: str, is_like: bool, current_user_id: str):
+        entities_model: EntitiesByComment = EntitiesByComment.get(comment_id=self.comment_id)
+        entities = EntitiesByComment.get_entities(comment_id=self.comment_id,  # type: ignore
+                                                  current_user_id=current_user_id,
+                                                  entities_model=entities_model)
+        if (entities.hasLiked and is_like) or (not entities.hasLiked and not is_like):
+            return
+        elif is_like:
+            entities_model.likes.add(current_user_id)  # type: ignore
+        else:
+            entities_model.likes.remove(current_user_id)  # type: ignore
+        self.liked_nb += 1 if is_like else -1
+        self.update()
+        entities_model.update()
+        CommentsByPhoto.get(
+            photo_id=photo_id,
+            comment_id=self.comment_id
+        ).update_comment(is_like=is_like)
 
 
 class CommentsByPhoto(Model):
@@ -256,7 +303,7 @@ class CommentsByPhoto(Model):
             "hasLiked": self.entities.hasLiked,
         }
 
-    def get_filtered_replies_objects(self, sort_by: str = "creteTime", nb: int = 6,
+    def get_filtered_replies_objects(self, sort_by: str = "createTime", nb: int = 6,
                                      start_index: int = 0) -> List[ReplyWithId]:
         return CommentUtils.get_filtered_replies_objects(
             replies=self.replies,  # type: ignore
@@ -267,7 +314,7 @@ class CommentsByPhoto(Model):
 
     def get_replies_objects(
             self,
-            sort_by: str = "creteTime",
+            sort_by: str = "createTime",
             nb: int = 6,
             start_index: int = 0,
     ) -> List[ReplyWithId]:
@@ -304,12 +351,12 @@ class CommentsByPhoto(Model):
                     nb=reply_nb,
                     start_index=0
                 )
-                comment.entities = EntitiesByComment.get_filtered_entities(
+                comment.entities = EntitiesByComment.get_entities(
                     comment_id=str(comment.comment_id),
                     current_user_id=current_user_id
                 )
                 for reply in comment.replies:
-                    reply.entities = EntitiesByComment.get_filtered_entities(
+                    reply.entities = EntitiesByComment.get_entities(
                         comment_id=str(reply.reply_id),
                         current_user_id=current_user_id
                     )
@@ -346,6 +393,10 @@ class CommentsByPhoto(Model):
         comment_to_update.reply_nb += 1
         comment_to_update.replies[reply.reply_id] = reply.reply_value  # type: ignore
         comment_to_update.update()
+
+    def update_comment(self, is_like: bool):
+        self.liked_nb += 1 if is_like else -1
+        self.update()
 
 
 class CommentUtils:
@@ -404,7 +455,7 @@ class CommentUtils:
 
     @classmethod
     def get_filtered_replies_objects(cls, replies: columns.Map(columns.Text, UserDefinedType(Reply)),
-                                     sort_by: str = "creteTime", nb: int = 6,
+                                     sort_by: str = "createTime", nb: int = 6,
                                      start_index: int = 0) -> List[ReplyWithId]:
         sort_by = SORTING_MAPPING[sort_by]
         return [ReplyWithId(id_, reply) for id_, reply in sorted(
@@ -886,20 +937,21 @@ class EntitiesByComment(Model):
         }
 
     @classmethod
-    def get_filtered_entities(cls, comment_id: str, current_user_id: str) -> Entities:
-        entity_models = get_filtered_models(
-            cls,
-            primary_key="comment_id",
-            id_value=comment_id,
-            sort_by=None,
-            access_level=None,
-            start_index=0,
-            nb=None
-        )
-        if len(entity_models) == 0:
-            return Entities()
-        entity_model = entity_models[0]
-        entity_dict = entity_model.to_dict()
+    def get_entities(cls, comment_id: str, current_user_id: str, entities_model=None) -> Entities:
+        if entities_model is None:
+            entity_models = get_filtered_models(
+                cls,
+                primary_key="comment_id",
+                id_value=comment_id,
+                sort_by=None,
+                access_level=None,
+                start_index=0,
+                nb=None
+            )
+            if len(entity_models) == 0:
+                return Entities()
+            entities_model = entity_models[0]
+        entity_dict = entities_model.to_dict()
         return Entities(
             hashtags=entity_dict["hashtags"],
             mentions=entity_dict["mentioned_users"],

@@ -2431,3 +2431,120 @@ class ApiTEST(unittest.TestCase):
             ]
         )
         delete_comment(photo_id="photo_01_1", comment_id=comment_id_to_remove)
+
+    def test_update_comment(self):
+        response = self._post_req_from_jon(
+            "'/trips/trip_01/photos/photo_01_1/comments/comment_02",
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "isLike": False
+            },
+            method="patch",
+        )
+        expected_response = {
+            "payload": {
+                "replyNb": 3,
+                "replies": [
+                    {
+                        "id": "reply_03",
+                        "user": {
+                            "id": "user_005",
+                            "accessLevel": "everyone",
+                            "nickName": "Samwell Tarly",
+                            "uniqueName": "samwell_tarly",
+                            "avatarSrc": "avatar.png"
+                        },
+                        "createTime": 1596146639,
+                        "content": "yes",
+                        "likedNb": 1,
+                        "mentions": [],
+                        "hashtags": [],
+                        "hasLiked": False
+                    },
+                    {
+                        "id": "reply_02",
+                        "user": {
+                            "id": "user_004",
+                            "accessLevel": "everyone",
+                            "nickName": "Blue Dragon",
+                            "uniqueName": "blue_dragon",
+                            "avatarSrc": "avatar.png"
+                        },
+                        "createTime": 1596142639,
+                        "content": "good",
+                        "likedNb": 3,
+                        "mentions": [],
+                        "hashtags": [],
+                        "hasLiked": False
+                    },
+                    {
+                        "id": "reply_01",
+                        "user": {
+                            "id": "user_003",
+                            "accessLevel": "everyone",
+                            "nickName": "Red Dragon",
+                            "uniqueName": "red_dragon",
+                            "avatarSrc": "avatar.png"
+                        },
+                        "createTime": 1596142629,
+                        "content": "what?",
+                        "likedNb": 3,
+                        "mentions": [],
+                        "hashtags": [],
+                        "hasLiked": False
+                    }
+                ],
+                "id": "comment_02",
+                "user": {
+                    "id": "user_002",
+                    "accessLevel": "everyone",
+                    "nickName": "Daenerys Targaryen",
+                    "uniqueName": "daenerys_targaryen",
+                    "avatarSrc": "avatar.png"
+                },
+                "createTime": 1596142639,
+                "content": "hello",
+                "likedNb": 6,
+                "mentions": [
+                    {
+                        "uniqueName": "jon_snow",
+                        "userId": "user_001",
+                        "startIndex": 18,
+                        "endIndex": 27
+                    }
+                ],
+                "hashtags": [
+                    {
+                        "name": "wonderline",
+                        "startIndex": 6,
+                        "endIndex": 17
+                    }
+                ],
+                "hasLiked": False
+            },
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1645229063
+        }
+        self._assert_response(
+            expected_code=200,
+            expected_res=expected_response,
+            response=response,
+            excludes=[
+                'timestamp',
+                'createTime',
+                'id',
+            ]
+        )
+        self._post_req_from_jon(
+            "'/trips/trip_01/photos/photo_01_1/comments/comment_02",
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "isLike": True
+            },
+            method="patch",
+        )

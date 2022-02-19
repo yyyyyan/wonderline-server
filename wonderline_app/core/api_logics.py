@@ -393,7 +393,28 @@ def create_new_reply(
                     raise APIError404(message=str(e))
         except PhotoNotFound as e:
             raise APIError404(message=str(e))
-    return [{}]
+
+
+@user_token_required
+def update_comment(
+        trip_id: str,
+        photo_id: str,
+        comment_id: str,
+        is_like: bool,
+):
+    trip = get_trip(trip_id=trip_id)
+    if trip:
+        try:
+            photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
+            if photo:
+                try:
+                    comment = Comment.get_comment(comment_id=comment_id)
+                    comment.update_comment(photo_id=photo_id, is_like=is_like, current_user_id=current_user.id)
+                    return comment.get_comment_as_dict(current_user_id=current_user.id)
+                except CommentNotFound as e:
+                    raise APIError404(message=str(e))
+        except PhotoNotFound as e:
+            raise APIError404(message=str(e))
 
 
 def sign_up(email: str,

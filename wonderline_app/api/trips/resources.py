@@ -9,14 +9,15 @@ from wonderline_app.api.common.request_parsers import common_parser
 from wonderline_app.api.common.responses import res_model
 from wonderline_app.api.namespaces import trips_namespace
 from wonderline_app.api.trips.request_models.models import trip_creation_model, trip_update_model, photo_upload_model, \
-    photo_update_model, photos_delete_model, photos_update_model, original_comment_model
+    photo_update_model, photos_delete_model, photos_update_model, original_comment_model, comment_update_model
 from wonderline_app.api.trips.request_parsers import trip_parser, trip_users_parser, trip_photos_parser, \
     trip_photo_parser, photo_comments_parser, comment_replies_parser
 from wonderline_app.api.trips.responses import trip_res, trip_users_res, trip_photos_res, trip_photo_res, \
-    photo_comments_res, comment_replies_res
+    photo_comments_res, comment_replies_res, comment_res
 from wonderline_app.core.api_logics import handle_request, get_complete_trip, get_users_by_trip, \
     get_photos_by_trip, get_photo_details, get_comments_by_photo, get_replies_by_comment, create_new_trip, update_trip, \
-    upload_trip_photos, update_trip_photo, delete_trip_photos, update_trip_photos, create_new_reply, create_new_comment
+    upload_trip_photos, update_trip_photo, delete_trip_photos, update_trip_photos, create_new_reply, create_new_comment, \
+    update_comment
 
 
 @trips_namespace.route("/<string:tripId>")
@@ -223,6 +224,24 @@ class PhotoComments(Resource):
             replies_sort_type=replies_sort_type,
             reply_nb=reply_nb,
             comment=comment,
+        )
+
+
+@trips_namespace.route("/<string:tripId>/photos/<string:photoId>/comments/<string:commentId>")
+class PhotoComment(Resource):
+    @trips_namespace.expect(common_parser, comment_update_model, validate=True)
+    @trips_namespace.marshal_with(comment_res)
+    def patch(self, tripId, photoId, commentId):
+        args = comment_replies_parser.parse_args()
+        user_token = args.get("userToken")
+        is_like = request.json['isLike']
+        return handle_request(
+            func=update_comment,
+            user_token=user_token,
+            trip_id=tripId,
+            photo_id=photoId,
+            comment_id=commentId,
+            is_like=is_like,
         )
 
 

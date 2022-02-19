@@ -76,3 +76,7 @@ _original_comment_model = trips_namespace.model("_OriginalComment", {
 original_comment_model = trips_namespace.model("OriginalComment", {
     "comment": fields.Nested(_original_comment_model)
 })
+
+comment_update_model = trips_namespace.model("CommentUpdateModel", {
+    "isLike": fields.Boolean(example=True, required=True)
+})
