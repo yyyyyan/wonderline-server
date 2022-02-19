@@ -3,7 +3,7 @@ import unittest
 
 from wonderline_app import APP
 from wonderline_app.db.cassandra.models import create_and_return_new_trip, delete_all_about_given_trip, \
-    delete_db_reply, delete_db_comment
+    CommentUtils
 from wonderline_app.db.postgres.init import db_session
 from wonderline_app.db.postgres.models import User
 from wonderline_app.utils import encode_image
@@ -2206,7 +2206,7 @@ class ApiTEST(unittest.TestCase):
                 'message'
             ]
         )
-        delete_db_reply(
+        CommentUtils.delete_db_reply(
             photo_id="photo_01_1",
             comment_id="comment_01",
             reply_id=reply_id_to_remove,
@@ -2430,7 +2430,7 @@ class ApiTEST(unittest.TestCase):
                 'message'
             ]
         )
-        delete_db_comment(photo_id="photo_01_1", comment_id=comment_id_to_remove)
+        CommentUtils.delete_db_comment(photo_id="photo_01_1", comment_id=comment_id_to_remove)
 
     def test_update_comment(self):
         response = self._post_req_from_jon(
@@ -2545,6 +2545,59 @@ class ApiTEST(unittest.TestCase):
             },
             payload={
                 "isLike": True
+            },
+            method="patch",
+        )
+
+    def test_update_reply(self):
+        response = self._post_req_from_jon(
+            "'/trips/trip_01/photos/photo_01_1/comments/comment_02/replies/reply_02",
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "isLike": True
+            },
+            method="patch",
+        )
+        expected_response = {
+            "payload": {
+                "id": "reply_02",
+                "user": {
+                    "id": "user_004",
+                    "accessLevel": "everyone",
+                    "nickName": "Blue Dragon",
+                    "uniqueName": "blue_dragon",
+                    "avatarSrc": "avatar.png"
+                },
+                "createTime": 1596142639,
+                "content": "good",
+                "likedNb": 4,
+                "mentions": [],
+                "hashtags": [],
+                "hasLiked": True
+            },
+            "feedbacks": [],
+            "errors": [],
+            "timestamp": 1645271693
+        }
+        self._assert_response(
+            expected_code=200,
+            expected_res=expected_response,
+            response=response,
+            excludes=[
+                'timestamp',
+                'createTime',
+                'id',
+            ]
+        )
+        self._post_req_from_jon(
+            "'/trips/trip_01/photos/photo_01_1/comments/comment_02/replies/reply_02",
+            params={
+                "userToken": 'test',
+            },
+            payload={
+                "isLike": False
             },
             method="patch",
         )

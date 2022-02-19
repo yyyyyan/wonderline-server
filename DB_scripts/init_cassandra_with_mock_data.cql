@@ -1820,3 +1820,15 @@ INSERT INTO wonderline.entities_by_comment (
     ],
     {'user_001', 'user_002', 'user_003', 'user_004', 'user_005', 'user_006', 'user_007'}
 );
+
+INSERT INTO wonderline.entities_by_comment (
+    comment_id,
+    hashtags,
+    mentioned_users,
+    likes
+) VALUES (
+    'reply_02',
+    [],
+    [],
+    {}
+);

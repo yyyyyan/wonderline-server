@@ -15,7 +15,7 @@ from wonderline_app.core.api_responses.response import Response, Error, Feedback
 from wonderline_app.db.cassandra.exceptions import TripNotFound, CommentNotFound, PhotoNotFound, ReplyNotFound
 from wonderline_app.db.cassandra.models import AlbumsByUser, TripsByUser, HighlightsByUser, MentionsByUser, Trip, \
     PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto, delete_photos, \
-    CommentUtils, delete_db_comment, delete_db_reply
+    CommentUtils
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.models import User
@@ -429,7 +429,7 @@ def delete_comment(
             photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
             if photo:
                 try:
-                    delete_db_comment(photo_id=photo_id, comment_id=comment_id)
+                    CommentUtils.delete_db_comment(photo_id=photo_id, comment_id=comment_id)
                 except CommentNotFound as e:
                     raise APIError404(message=str(e))
         except PhotoNotFound as e:
@@ -450,7 +450,32 @@ def delete_reply(
             if photo:
                 try:
                     Comment.get_comment(comment_id=comment_id)
-                    delete_db_reply(photo_id=photo_id, comment_id=comment_id, reply_id=reply_id)
+                    CommentUtils.delete_db_reply(photo_id=photo_id, comment_id=comment_id, reply_id=reply_id)
+                except (CommentNotFound, ReplyNotFound) as e:
+                    raise APIError404(message=str(e))
+        except PhotoNotFound as e:
+            raise APIError404(message=str(e))
+
+
+@user_token_required
+def update_reply(
+        trip_id: str,
+        photo_id: str,
+        comment_id: str,
+        reply_id: str,
+        is_like: bool,
+):
+    trip = get_trip(trip_id=trip_id)
+    if trip:
+        try:
+            photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
+            if photo:
+                try:
+                    Comment.get_comment(comment_id=comment_id)
+                    reply = CommentUtils.update_reply(photo_id=photo_id, comment_id=comment_id, reply_id=reply_id,
+                                                      is_like=is_like,
+                                                      current_user_id=current_user.id)
+                    return reply.to_dict()
                 except (CommentNotFound, ReplyNotFound) as e:
                     raise APIError404(message=str(e))
         except PhotoNotFound as e:

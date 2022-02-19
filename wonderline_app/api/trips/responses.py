@@ -29,3 +29,6 @@ comment_replies_res = create_res(trips_namespace, "CommentRepliesResponse",
 
 comment_res = create_res(trips_namespace, "CommentResponse",
                          fields.Nested(comment_model))
+
+reply_res = create_res(trips_namespace, "ReplyResponse",
+                       fields.Nested(reply_model))

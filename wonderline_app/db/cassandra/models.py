@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from itertools import islice
 from typing import List, Dict, Optional, Set
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.columns import UserDefinedType
@@ -461,6 +460,65 @@ class CommentUtils:
         return [ReplyWithId(id_, reply) for id_, reply in sorted(
             replies.items(), key=lambda x: getattr(replies[x[0]], sort_by), reverse=True)][  # type: ignore
                start_index: start_index + nb]
+
+    @classmethod
+    def delete_db_reply(cls, photo_id: str, comment_id: str, reply_id: str):
+        # only used for integration test
+        # remove in Comment
+        comment = Comment.get(comment_id=comment_id)
+        if reply_id not in comment.replies:
+            raise ReplyNotFound(f"Reply {reply_id} is not found")
+        comment.replies[reply_id] = None
+        comment.reply_nb -= 1
+        comment.update()
+        # remove in CommentsByPhoto
+        comment_in_comments_by_photo = CommentsByPhoto.get(
+            photo_id=photo_id,
+            comment_id=comment_id,
+        )
+        comment_in_comments_by_photo.replies[reply_id] = None
+        comment_in_comments_by_photo.reply_nb -= 1
+        comment_in_comments_by_photo.update()
+        # remove in EntitiesByComment
+        EntitiesByComment.get(comment_id=reply_id).delete()
+
+    @classmethod
+    def delete_db_comment(cls, photo_id: str, comment_id: str):
+        # only used for integration test for now
+        Comment.get(comment_id=comment_id).delete()
+        CommentsByPhoto.get(
+            photo_id=photo_id,
+            comment_id=comment_id
+        ).delete()
+        EntitiesByComment.get(comment_id=comment_id).delete()
+
+    @classmethod
+    def update_reply(cls, photo_id: str, comment_id: str, reply_id: str, is_like: bool,
+                     current_user_id: str) -> ReplyWithId:
+
+        comment = Comment.get_comment(comment_id=comment_id)
+        entities = EntitiesByComment.get(comment_id=reply_id)
+        if (current_user_id in entities.likes and not is_like) or (current_user_id not in entities.likes and is_like):
+            if is_like:
+                entities.likes.add(current_user_id)
+            else:
+                entities.likes.remove(current_user_id)
+            entities.update()
+
+            like_delta = 1 if is_like else -1
+
+            comment.replies[reply_id].liked_nb += like_delta
+            comment.update()
+
+            comment = CommentsByPhoto.get(photo_id=photo_id, comment_id=comment_id)
+            comment.replies[reply_id].liked_nb += like_delta
+            comment.update()
+        reply_with_id = ReplyWithId(reply_id=reply_id, _reply=comment.replies[reply_id])
+        reply_with_id.entities = EntitiesByComment.get_entities(
+            current_user_id=current_user_id,
+            entities_model=entities
+        )
+        return reply_with_id
 
 
 class TripUtils:
@@ -937,7 +995,7 @@ class EntitiesByComment(Model):
         }
 
     @classmethod
-    def get_entities(cls, comment_id: str, current_user_id: str, entities_model=None) -> Entities:
+    def get_entities(cls, current_user_id: str, entities_model=None, comment_id: Optional[str] = None) -> Entities:
         if entities_model is None:
             entity_models = get_filtered_models(
                 cls,
@@ -1020,34 +1078,3 @@ def delete_all_about_given_trip(trip_id: str, photo_ids=None):
         trips_by_user_record.delete()
     delete_photos(trip_id, photo_ids)
     trip.delete()
-
-
-def delete_db_comment(photo_id: str, comment_id: str):
-    # only used for integration test for now
-    Comment.get(comment_id=comment_id).delete()
-    CommentsByPhoto.get(
-        photo_id=photo_id,
-        comment_id=comment_id
-    ).delete()
-    EntitiesByComment.get(comment_id=comment_id).delete()
-
-
-def delete_db_reply(photo_id: str, comment_id: str, reply_id: str):
-    # only used for integration test
-    # remove in Comment
-    comment = Comment.get(comment_id=comment_id)
-    if reply_id not in comment.replies:
-        raise ReplyNotFound(f"Reply {reply_id} is not found")
-    comment.replies[reply_id] = None
-    comment.reply_nb -= 1
-    comment.update()
-    # remove in CommentsByPhoto
-    comment_in_comments_by_photo = CommentsByPhoto.get(
-        photo_id=photo_id,
-        comment_id=comment_id,
-    )
-    comment_in_comments_by_photo.replies[reply_id] = None
-    comment_in_comments_by_photo.reply_nb -= 1
-    comment_in_comments_by_photo.update()
-    # remove in EntitiesByComment
-    EntitiesByComment.get(comment_id=reply_id).delete()
