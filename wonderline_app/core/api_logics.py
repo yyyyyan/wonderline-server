@@ -14,8 +14,8 @@ from wonderline_app.core.image_service import ImageSize, upload_encoded_image, D
 from wonderline_app.core.api_responses.response import Response, Error, Feedback
 from wonderline_app.db.cassandra.exceptions import TripNotFound, CommentNotFound, PhotoNotFound
 from wonderline_app.db.cassandra.models import AlbumsByUser, TripsByUser, HighlightsByUser, MentionsByUser, Trip, \
-    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto, delete_photos, Hashtag, \
-    MentionedUser, EntitiesByComment, Reply, CommentUtils
+    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto, delete_photos, \
+    CommentUtils, delete_db_comment
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.models import User
@@ -411,6 +411,25 @@ def update_comment(
                     comment = Comment.get_comment(comment_id=comment_id)
                     comment.update_comment(photo_id=photo_id, is_like=is_like, current_user_id=current_user.id)
                     return comment.get_comment_as_dict(current_user_id=current_user.id)
+                except CommentNotFound as e:
+                    raise APIError404(message=str(e))
+        except PhotoNotFound as e:
+            raise APIError404(message=str(e))
+
+
+@user_token_required
+def delete_comment(
+        trip_id: str,
+        photo_id: str,
+        comment_id: str,
+):
+    trip = get_trip(trip_id=trip_id)
+    if trip:
+        try:
+            photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
+            if photo:
+                try:
+                    delete_db_comment(photo_id=photo_id, comment_id=comment_id)
                 except CommentNotFound as e:
                     raise APIError404(message=str(e))
         except PhotoNotFound as e:

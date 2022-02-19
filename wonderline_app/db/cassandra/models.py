@@ -1022,7 +1022,7 @@ def delete_all_about_given_trip(trip_id: str, photo_ids=None):
     trip.delete()
 
 
-def delete_comment(photo_id: str, comment_id: str):
+def delete_db_comment(photo_id: str, comment_id: str):
     # only used for integration test for now
     Comment.get(comment_id=comment_id).delete()
     CommentsByPhoto.get(
@@ -1032,7 +1032,7 @@ def delete_comment(photo_id: str, comment_id: str):
     EntitiesByComment.get(comment_id=comment_id).delete()
 
 
-def delete_reply(photo_id: str, comment_id: str, reply_id: str):
+def delete_db_reply(photo_id: str, comment_id: str, reply_id: str):
     # only used for integration test
     # remove in Comment
     comment = Comment.get(comment_id=comment_id)

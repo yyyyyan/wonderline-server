@@ -3,7 +3,7 @@ import unittest
 
 from wonderline_app import APP
 from wonderline_app.db.cassandra.models import create_and_return_new_trip, delete_all_about_given_trip, \
-    delete_reply, delete_comment
+    delete_db_reply, delete_db_comment
 from wonderline_app.db.postgres.init import db_session
 from wonderline_app.db.postgres.models import User
 from wonderline_app.utils import encode_image
@@ -2206,7 +2206,7 @@ class ApiTEST(unittest.TestCase):
                 'message'
             ]
         )
-        delete_reply(
+        delete_db_reply(
             photo_id="photo_01_1",
             comment_id="comment_01",
             reply_id=reply_id_to_remove,
@@ -2430,7 +2430,7 @@ class ApiTEST(unittest.TestCase):
                 'message'
             ]
         )
-        delete_comment(photo_id="photo_01_1", comment_id=comment_id_to_remove)
+        delete_db_comment(photo_id="photo_01_1", comment_id=comment_id_to_remove)
 
     def test_update_comment(self):
         response = self._post_req_from_jon(

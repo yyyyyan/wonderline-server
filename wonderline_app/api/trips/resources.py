@@ -17,7 +17,7 @@ from wonderline_app.api.trips.responses import trip_res, trip_users_res, trip_ph
 from wonderline_app.core.api_logics import handle_request, get_complete_trip, get_users_by_trip, \
     get_photos_by_trip, get_photo_details, get_comments_by_photo, get_replies_by_comment, create_new_trip, update_trip, \
     upload_trip_photos, update_trip_photo, delete_trip_photos, update_trip_photos, create_new_reply, create_new_comment, \
-    update_comment
+    update_comment, delete_comment
 
 
 @trips_namespace.route("/<string:tripId>")
@@ -242,6 +242,19 @@ class PhotoComment(Resource):
             photo_id=photoId,
             comment_id=commentId,
             is_like=is_like,
+        )
+
+    @trips_namespace.expect(common_parser, validate=True)
+    @trips_namespace.marshal_with(res_model)
+    def delete(self, tripId, photoId, commentId):
+        args = comment_replies_parser.parse_args()
+        user_token = args.get("userToken")
+        return handle_request(
+            func=delete_comment,
+            user_token=user_token,
+            trip_id=tripId,
+            photo_id=photoId,
+            comment_id=commentId,
         )
 
 
