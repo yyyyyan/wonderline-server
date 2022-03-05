@@ -34,17 +34,20 @@ services:
 
   minio:
     container_name: minio
-    image: minio/minio:RELEASE.2021-07-22T05-23-32Z
+    image: minio/minio:RELEASE.2022-03-05T06-32-39Z.fips
     networks:
       - wonderline-shared-net
     ports:
       - 9000:9000
+      - 9001:9001
     volumes:
       - /tmp/minio_data:/export
+      - ./minio:/root/.minio
     environment:
-      - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
-      - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-    command: server /export
+      - MINIO_ROOT_USER=wonderline
+      - MINIO_ROOT_PASSWORD=wonderline
+      - MINIO_SERVER_URL=https://localhost:9000
+    command: server --address ":9000" --console-address ":9001" /export
 
   cassandra:
     container_name: cassandra

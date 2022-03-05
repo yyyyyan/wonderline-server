@@ -112,6 +112,56 @@ mc config host add minio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7
 mc policy get minio/photos
 mc ls minio/photos
 ```
+#### How to make https work for minio
+##### Generate private/public keys
+```bash
+openssl req -x509 -out public.crt -keyout private.key \
+  -newkey rsa:2048 -nodes -sha256 \
+  -subj '/CN=localhost' -extensions EXT -config <( \
+   printf "[dn]\nC=FR\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
+```
+##### Move them into a local folder
+```bash
+mkdir -p ./minio/certs
+mv public.crt private.key ./minio/certs/
+```
+##### Setup docker-compose
+```yaml
+minio:
+    container_name: minio
+    image: minio/minio:RELEASE.2022-03-05T06-32-39Z.fips
+    networks:
+      - wonderline-shared-net
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - /tmp/minio_data:/export
+      - ./minio:/root/.minio
+    environment:
+      - MINIO_ROOT_USER=wonderline
+      - MINIO_ROOT_PASSWORD=wonderline
+      - MINIO_SERVER_URL=https://localhost:9000
+    command: server --address ":9000" --console-address ":9001" /export
+```
+where `- minio:/root/minio`, `- MINIO_SERVER_URL=https://localhost:9000` and `--address ":9000" --console-address ":9001"`
+are essential.
+##### Change minio client code
+```python
+import os
+import urllib3
+from minio import Minio
+
+
+minio_client = Minio(
+    endpoint=os.environ['MINIO_HOST'] + ':' + os.environ['MINIO_PORT'],
+    access_key=os.environ['MINIO_ROOT_USER'],
+    secret_key=os.environ['MINIO_ROOT_PASSWORD'],
+    secure=True,
+    http_client=urllib3.PoolManager(cert_reqs="CERT_NONE"),
+)
+```
+
 ## Testing
 Install the required libraries for testing
 ```shell script
