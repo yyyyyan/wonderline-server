@@ -15,3 +15,7 @@ user_sign_in_model = users_namespace.model("UserSignIn", {
     "email": fields.String(example="jon@gmail.com", required=True),
     "password": fields.String(example="password", required=True)
 })
+
+user_update_model = users_namespace.model("UserUpdate", {
+    "nickName": fields.String(example="Jon Snow", required=True),
+})

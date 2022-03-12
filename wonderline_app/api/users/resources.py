@@ -6,15 +6,16 @@ import logging
 from flask import request
 from flask_restplus import Resource
 
+from wonderline_app.api.common.request_parsers import common_parser
 from wonderline_app.api.namespaces import users_namespace
-from wonderline_app.api.users.request_models.models import user_sign_up_model, user_sign_in_model
+from wonderline_app.api.users.request_models.models import user_sign_up_model, user_sign_in_model, user_update_model
 from wonderline_app.core.api_logics import get_user_complete_attributes, handle_request, get_user_followers, \
     get_albums_by_user, \
-    get_trips_by_user, get_highlights_by_user, get_mentions_by_user, sign_up, sign_in, sign_out
+    get_trips_by_user, get_highlights_by_user, get_mentions_by_user, sign_up, sign_in, sign_out, update_user
 from wonderline_app.api.users.request_parsers import user_parser, user_albums_parser, followers_parser, \
     user_trips_parser, user_highlights_parser, user_mentions_parser, user_sign_out_parser
 from wonderline_app.api.users.responses import user_res, user_albums_res, followers_res, user_trips_res, \
-    user_highlights_res, user_mentions_res, user_sign_up_res, user_sign_in_res, user_sign_out_res
+    user_highlights_res, user_mentions_res, user_sign_up_res, user_sign_in_res, user_sign_out_res, reduced_user_res
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class User(Resource):
             user_id=userId,
             followers_sort_type=followers_sort_type,
             follower_nb=follower_nb)
+
 
 
 @users_namespace.route("/<string:userId>/followers")
@@ -185,4 +187,19 @@ class UserSignOut(Resource):
         return handle_request(
             func=sign_out,
             user_token=user_token
+        )
+
+
+@users_namespace.route("")
+class UserUpdate(Resource):
+    @users_namespace.expect(common_parser, user_update_model, validate=True)
+    @users_namespace.marshal_with(reduced_user_res)
+    def patch(self):
+        args = user_albums_parser.parse_args()
+        user_token = args.get("userToken")
+        new_nick_name = request.json["nickName"]
+        return handle_request(
+            func=update_user,
+            user_token=user_token,
+            new_nick_name=new_nick_name
         )

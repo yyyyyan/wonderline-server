@@ -225,6 +225,17 @@ class User(Base, UserMixin):
             return [u.to_reduced_dict() for u in matched_users[start_index: start_index + nb]]
         return []
 
+    @classmethod
+    def update_nick_name(cls, user_id: str, new_nick_name: str) -> Dict:
+        user = cls.get_user_or_none(user_id=user_id)
+        if user:
+            user.nickName = new_nick_name
+            reduced_dict = user.to_reduced_dict()
+            db_session.commit()
+            return reduced_dict
+        else:
+            return {}
+
 
 class Following(Base):
     """Sqlalchemy Following model"""

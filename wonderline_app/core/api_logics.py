@@ -534,6 +534,14 @@ def sign_out():
 
 
 @user_token_required
+def update_user(new_nick_name: str) -> Dict:
+    try:
+        return User.update_nick_name(user_id=current_user.id, new_nick_name=new_nick_name)
+    except UserNotFound:
+        raise APIError404(f"User id {current_user.id} is not found")
+
+
+@user_token_required
 def create_new_trip(owner_id: str, trip_name: str, user_ids: List[str], users_sort_type: str):
     new_trip = create_and_return_new_trip(owner_id, trip_name, user_ids)
     if new_trip is not None:
