@@ -258,7 +258,7 @@ def get_photo_details(trip_id: str, photo_id: str, liked_users_sort_type: str,
             if photo:
                 return photo.get_photo_information(
                     photo_id=photo_id,
-                    current_user_id=current_user,
+                    current_user_id=current_user.id,
                     liked_users_sort_by=liked_users_sort_type,
                     liked_user_nb=liked_user_nb,
                     comments_sort_by=comments_sort_type,
@@ -702,7 +702,7 @@ def upload_trip_photos(trip_id: str, original_photos: List[Dict]) -> Tuple[List[
 
 
 def _update_photo(trip_id: str, photo_id: str, access_level: str, mentioned_users: Optional[List[str]],
-                  location: Optional[str]) -> Photo:
+                  location: Optional[str], is_liked: Optional[bool] = None) -> Photo:
     photo = Photo.get_photo_by_photo_id(photo_id=photo_id)
     if photo:
         attributes_to_update = {}
@@ -712,9 +712,20 @@ def _update_photo(trip_id: str, photo_id: str, access_level: str, mentioned_user
             attributes_to_update['mentioned_users'] = set(mentioned_users)
         if location is not None:
             attributes_to_update['location'] = location
-
+        if is_liked is not None:
+            # TODO: avoid a copy, it will waste memory usage
+            liked_users, liked_nb = photo.liked_users, photo.liked_nb
+            if is_liked and current_user.id not in liked_users:
+                liked_users.add(current_user.id)
+                liked_nb += 1
+            elif not is_liked and current_user.id in liked_users:
+                liked_users.remove(current_user.id)
+                liked_nb -= 1
+            attributes_to_update["liked_users"] = liked_users
+            attributes_to_update["liked_nb"] = liked_nb
         photo.update(**attributes_to_update)
         attributes_to_update.pop('mentioned_users', None)
+        attributes_to_update.pop('liked_users', None)
         if len(attributes_to_update.keys()) > 0:
             photos_by_trip_record = PhotosByTrip.get(
                 trip_id=trip_id,
@@ -727,12 +738,12 @@ def _update_photo(trip_id: str, photo_id: str, access_level: str, mentioned_user
 
 @user_token_required
 def update_trip_photo(trip_id: str, photo_id: str, access_level: str, mentioned_users: Optional[List[str]],
-                      location: Optional[str]):
+                      location: Optional[str], is_liked: Optional[bool]):
     trip = get_trip(trip_id=trip_id)
     if trip:
         try:
-            photo = _update_photo(trip_id, photo_id, access_level, mentioned_users, location)
-            return photo.get_photo_information(photo_id=photo_id, current_user_id=current_user)
+            photo = _update_photo(trip_id, photo_id, access_level, mentioned_users, location, is_liked)
+            return photo.get_photo_information(photo_id=photo_id, current_user_id=current_user.id)
         except PhotoNotFound as e:
             raise APIError404(message=str(e))
 

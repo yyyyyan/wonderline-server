@@ -904,6 +904,7 @@ class ApiTEST(unittest.TestCase):
                     "likedNb": 7
                 },
                 "hqSrc": "",
+                "hasLiked": True,
                 "likedUsers": [
                     {
                         "id": "user_001",
@@ -993,7 +994,7 @@ class ApiTEST(unittest.TestCase):
                                 "endIndex": 17
                             }
                         ],
-                        "hasLiked": False
+                        "hasLiked": True,
                     },
                     {
                         "replyNb": 2,
@@ -1636,7 +1637,8 @@ class ApiTEST(unittest.TestCase):
             payload={
                 "accessLevel": "everyone",
                 "mentionedUserIds": ["user_001", "user_002"],
-                "location": "Shanghai"
+                "location": "Shanghai",
+                "isLiked": False,
 
             }
         )
@@ -1662,17 +1664,11 @@ class ApiTEST(unittest.TestCase):
                     "height": 1365,
                     "lqSrc": "photo_1.jpg",
                     "src": "photo_1.jpg",
-                    "likedNb": 7
+                    "likedNb": 6,
                 },
                 "hqSrc": "",
+                "hasLiked": False,
                 "likedUsers": [
-                    {
-                        "id": "user_001",
-                        "accessLevel": "everyone",
-                        "nickName": "Jon Snow",
-                        "uniqueName": "jon_snow",
-                        "avatarSrc": "avatar.png"
-                    },
                     {
                         "id": "user_002",
                         "accessLevel": "everyone",
@@ -1707,7 +1703,15 @@ class ApiTEST(unittest.TestCase):
                         "nickName": "Cersei Lannister",
                         "uniqueName": "cersei_lannister",
                         "avatarSrc": "avatar.png"
-                    }
+                    },
+                    {
+                        "id": "user_007",
+                        "accessLevel": "everyone",
+                        "avatarSrc": "avatar.png",
+                        "nickName": "Night King",
+                        "uniqueName": "night_king",
+                    },
+
                 ],
                 "mentionedUsers": [
                     {
@@ -1805,7 +1809,7 @@ class ApiTEST(unittest.TestCase):
                                 "endIndex": 17
                             }
                         ],
-                        "hasLiked": False
+                        "hasLiked": True,
                     },
                     {
                         "replyNb": 2,
@@ -1883,6 +1887,7 @@ class ApiTEST(unittest.TestCase):
                 "accessLevel": "everyone",
                 "mentionedUserIds": ["user_001"],
                 "location": "Westeros",
+                "isLiked": True,
             }
         )
 

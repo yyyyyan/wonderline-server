@@ -59,5 +59,6 @@ photo_model = trips_namespace.model("Photo", {
     "likedUsers": fields.List(fields.Nested(reduced_user_model)),
     "mentionedUsers": fields.List(fields.Nested(reduced_user_model)),
     "commentNb": fields.Integer(example=15),
-    "comments": fields.List(fields.Nested(comment_model, allow_null=True))
+    "comments": fields.List(fields.Nested(comment_model, allow_null=True)),
+    "hasLiked": fields.Boolean(),
 })

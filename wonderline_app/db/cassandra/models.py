@@ -570,6 +570,8 @@ class Photo(Model, PhotoUtils):
     comment_nb = columns.SmallInt(default=0)
     comments = columns.Set(columns.Text())
 
+    hasLiked: bool = False
+
     def to_dict(self) -> Dict:
         return {
             "reducedPhoto": self.to_reduced_photo_dict(),
@@ -577,7 +579,8 @@ class Photo(Model, PhotoUtils):
             "likedUsers": [u.to_reduced_dict() for u in self.liked_users],
             "mentionedUsers": [u.to_reduced_dict() for u in self.mentioned_users],
             "commentNb": self.comment_nb,
-            "comments": [c.to_dict() for c in self.comments]
+            "comments": [c.to_dict() for c in self.comments],
+            "hasLiked": self.hasLiked,
         }
 
     def to_reduced_photo_dict(self) -> Dict:
@@ -649,6 +652,7 @@ class Photo(Model, PhotoUtils):
             current_user_id=current_user_id,
             replies_sort_by=comments_sort_by,
             reply_nb=comment_nb)
+        photo.hasLiked = current_user_id in self.liked_users
         return photo.to_dict()
 
 
