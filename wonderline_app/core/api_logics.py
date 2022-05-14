@@ -14,8 +14,8 @@ from wonderline_app.core.image_service import ImageSize, upload_encoded_image, D
 from wonderline_app.core.api_responses.response import Response, Error, Feedback
 from wonderline_app.db.cassandra.exceptions import TripNotFound, CommentNotFound, PhotoNotFound, ReplyNotFound
 from wonderline_app.db.cassandra.models import AlbumsByUser, TripsByUser, HighlightsByUser, MentionsByUser, Trip, \
-    PhotosByTrip, CommentsByPhoto, Photo, Comment, create_and_return_new_trip, ReducedPhoto, delete_photos, \
-    CommentUtils
+    PhotosByTrip, Photo, create_and_return_new_trip, ReducedPhoto, delete_photos
+from wonderline_app.db.cassandra.comments import Comment, CommentsByPhoto, CommentUtils
 from wonderline_app.db.postgres.exceptions import UserNotFound, UserPasswordIncorrect, UserTokenInvalid, \
     UserTokenExpired
 from wonderline_app.db.postgres.models import User

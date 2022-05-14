@@ -2,8 +2,8 @@ import os
 import unittest
 
 from wonderline_app import APP
-from wonderline_app.db.cassandra.models import create_and_return_new_trip, delete_all_about_given_trip, \
-    CommentUtils
+from wonderline_app.db.cassandra.models import create_and_return_new_trip, delete_all_about_given_trip
+from wonderline_app.db.cassandra.comments import CommentUtils
 from wonderline_app.db.postgres.init import db_session
 from wonderline_app.db.postgres.models import User
 from wonderline_app.utils import encode_image
